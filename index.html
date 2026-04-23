@@ -160,15 +160,16 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
     <button class="ntb" onclick="swTab('archive')">Archive</button>
   </div>
 
-  <div id="api-key-section" style="margin:.75rem 0">
-  <div class="privacy-badge">&#128274; Your API key is stored only in your browser</div>
-  <div style="display:flex;gap:.5rem;margin-top:.5rem;align-items:center">
-    <input type="password" id="api-key-input" placeholder="Enter Anthropic API key (sk-ant-...)" 
-      style="flex:1;border:1px solid var(--border);border-radius:.35rem;padding:.5rem .75rem;font-family:'DM Sans',sans-serif;font-size:.85rem;background:white;color:var(--ink)" 
+  <div id="api-key-section" style="background:var(--al);border:2px solid var(--amber);border-radius:.5rem;padding:1rem 1.2rem;margin:.5rem 0">
+  <div style="font-family:'DM Mono',monospace;font-size:.62rem;color:var(--amber);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem">&#128274; Step Required: Enter Your API Key</div>
+  <div style="font-size:.88rem;color:var(--ink);margin-bottom:.65rem;line-height:1.6">To generate your philosophical profile, you need a free Anthropic API key. Get one at <strong>console.anthropic.com</strong> (takes 2 minutes). Your key is stored only in this browser and never sent anywhere except Anthropic.</div>
+  <div style="display:flex;gap:.5rem;align-items:center">
+    <input type="password" id="api-key-input" placeholder="sk-ant-..." 
+      style="flex:1;border:1px solid var(--border);border-radius:.35rem;padding:.55rem .75rem;font-family:'DM Mono',monospace;font-size:.82rem;background:white;color:var(--ink)" 
       oninput="saveApiKey()">
-    <button class="btn btn-out" onclick="document.getElementById('api-key-section').style.display='none'" style="white-space:nowrap;font-size:.8rem">&#10003; Set</button>
+    <button class="btn" onclick="confirmApiKey()" style="white-space:nowrap">Save Key &#10003;</button>
   </div>
-  <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem">Your API key never leaves your browser. Get a free key at console.anthropic.com</div>
+  <div id="key-status" style="font-size:.78rem;color:var(--teal);margin-top:.35rem;display:none">&#10003; Key saved. You can now generate your profile.</div>
 </div>
 
   <!-- PROFILE TAB -->
@@ -343,6 +344,10 @@ function beginJourney(){
   document.getElementById('landing').style.display='none';
   document.getElementById('workspace').style.display='block';
   state.workspace=true; save();
+  // Show API key section prominently if no key stored
+  var hasKey=getApiKey();
+  var keySection=document.getElementById('api-key-section');
+  if(keySection){keySection.style.display=hasKey?'none':'block';}
   if(state.profile){showProfile();}else{document.getElementById('profile-start').style.display='block';}
   buildCoherence(); renderArchive(); buildCoherenceChart();
 }
@@ -440,7 +445,7 @@ async function generateProfile(){if(!checkApiKey())return;
   try{
     var resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':getApiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1200,system:sys,messages:msgs})});
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1200,system:sys,messages:msgs})});
     var data=await resp.json();
     var text=(data.content&&data.content[0]&&data.content[0].text)||'Profile generation encountered an issue. Please try again.';
     state.profile=text; save();
@@ -449,7 +454,9 @@ async function generateProfile(){if(!checkApiKey())return;
   }catch(e){
     document.getElementById('profile-loading').style.display='none';
     document.getElementById('profile-assembly').style.display='block';
-    alert('Profile generation failed. Please check your connection and try again.');
+    var msg='Profile generation failed.\n\nPossible causes:\n• Invalid or missing API key (check console.anthropic.com)\n• No internet connection\n• API key has no credits\n\nError: '+e.message;
+    alert(msg);
+    console.error('Examined profile error:',e);
   }
 }
 function showProfile(){
@@ -486,7 +493,7 @@ async function sendMessage(){if(!checkApiKey())return;
   try{
     var resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':getApiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:350,system:sys,messages:state.chatHistory.slice(-10)})});
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:350,system:sys,messages:state.chatHistory.slice(-10)})});
     var data=await resp.json();
     var text=(data.content&&data.content[0]&&data.content[0].text)||'I encountered a connection issue. Please try again.';
     thinking.remove();
@@ -496,7 +503,11 @@ async function sendMessage(){if(!checkApiKey())return;
     save();
   }catch(e){
     thinking.remove();
-    appendMsg('assistant','I had trouble connecting. Please check your connection and try again.');
+    var errMsg='I had trouble connecting.';
+    if(!getApiKey()){errMsg='No API key found. Please enter your Anthropic API key at the top of the page.';}
+    else if(e.message&&e.message.includes('401')){errMsg='API key appears invalid. Please check your key at console.anthropic.com';}
+    appendMsg('assistant',errMsg);
+    console.error('Examined companion error:',e);
   }
 }
 function appendMsg(role,text){
@@ -596,7 +607,19 @@ async function generateLetter(){
 
 function saveApiKey(){
   var k=document.getElementById('api-key-input').value.trim();
-  if(k)localStorage.setItem('examined_apikey',k);
+  if(k){localStorage.setItem('examined_apikey',k);}
+}
+function confirmApiKey(){
+  var k=document.getElementById('api-key-input').value.trim();
+  if(!k){alert('Please enter your API key first.');return;}
+  if(!k.startsWith('sk-')){alert('That does not look like an Anthropic API key. It should start with sk-ant-...');return;}
+  localStorage.setItem('examined_apikey',k);
+  var status=document.getElementById('key-status');
+  if(status){status.style.display='block';}
+  setTimeout(function(){
+    var section=document.getElementById('api-key-section');
+    if(section)section.style.display='none';
+  },2000);
 }
 function getApiKey(){
   return localStorage.getItem('examined_apikey')||'';
@@ -605,7 +628,7 @@ function checkApiKey(){
   var k=getApiKey();
   if(!k){
     var section=document.getElementById('api-key-section');
-    if(section)section.style.display='block';
+    if(section){section.style.display='block';section.scrollIntoView({behavior:'smooth'});}
     return false;
   }
   return true;

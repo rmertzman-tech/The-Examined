@@ -160,8 +160,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
     <button class="ntb" onclick="swTab('archive')">Archive</button>
   </div>
 
-  <div id="api-key-section" style="background:var(--al);border:2px solid var(--amber);border-radius:.5rem;padding:1rem 1.2rem;margin:.5rem 0">
-  <div style="font-family:'DM Mono',monospace;font-size:.62rem;color:var(--amber);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem">&#128274; Step Required: Enter Your API Key</div>
+  <div style="background:var(--tl);border:1px solid rgba(13,94,87,.2);border-radius:.4rem;padding:.6rem .9rem;margin:.5rem 0;display:flex;gap:.5rem;align-items:center">
+  <span style="font-size:.8rem">&#128274;</span>
+  <span style="font-size:.8rem;color:var(--teal)">Your data stays in your browser. AI processing is handled privately through the course server.</span>
+</div>
   <div style="font-size:.88rem;color:var(--ink);margin-bottom:.65rem;line-height:1.6">To generate your philosophical profile, you need a free Anthropic API key. Get one at <strong>console.anthropic.com</strong> (takes 2 minutes). Your key is stored only in this browser and never sent anywhere except Anthropic.</div>
   <div style="display:flex;gap:.5rem;align-items:center">
     <input type="password" id="api-key-input" placeholder="sk-ant-..." 
@@ -285,6 +287,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 </div>
 
 <script>
+// ═══ CONFIGURATION — Replace with your Anthropic API key ═══
+// Get your key at console.anthropic.com → API Keys
+// Set a spending cap at console.anthropic.com → Billing → Usage limits
+var EXAMINED_API_KEY = '';  // <-- paste your sk-ant-... key between the quotes
+// ════════════════════════════════════════════════════════════
+
+
 // ═══ STATE ═══
 var state={
   workspace:false, profile:null, assembly:null,
@@ -344,10 +353,7 @@ function beginJourney(){
   document.getElementById('landing').style.display='none';
   document.getElementById('workspace').style.display='block';
   state.workspace=true; save();
-  // Show API key section prominently if no key stored
-  var hasKey=getApiKey();
-  var keySection=document.getElementById('api-key-section');
-  if(keySection){keySection.style.display=hasKey?'none':'block';}
+
   if(state.profile){showProfile();}else{document.getElementById('profile-start').style.display='block';}
   buildCoherence(); renderArchive(); buildCoherenceChart();
 }
@@ -431,8 +437,7 @@ function checkAsm(){
   var filled=ASM_Q.filter(function(q){var v=document.getElementById('asm-'+q.n);return v&&v.value.trim().length>40;}).length;
   document.getElementById('asm-btn').disabled=filled<4;
 }
-async function generateProfile(){if(!checkApiKey())return;
-  var asm={};
+async function generateProfile(){var asm={};
   ASM_Q.forEach(function(q){var v=document.getElementById('asm-'+q.n);asm[q.n]=v?v.value:'';});
   state.asmAnswers=asm; save();
   document.getElementById('profile-assembly').style.display='none';
@@ -443,8 +448,8 @@ async function generateProfile(){if(!checkApiKey())return;
   var sys='You are generating a personal philosophical profile for a person who has completed the PRF22 moral framework assessment and answered six assembly history questions. Your task is to write a profile that feels like genuine recognition \u2014 like the person is reading a description of themselves that is more accurate than they usually receive.\n\nPRF scores: Care='+scores.care+', Fairness='+scores.fair+', Loyalty='+scores.loyal+', Authority='+scores.auth+'\nPrimary foundation: '+primaryNames[primary]+'\n\nWrite 5 paragraphs (600-800 words total) that:\n1. Describe specifically how this person tends to perceive moral situations \u2014 what they notice first, what tends to register as urgent\n2. Describe their characteristic strengths as a moral agent given this framework\n3. Describe the specific blind spots or tensions their framework creates\n4. Reflect on the assembly history they described, weaving themes from their responses without quoting them directly\n5. End with a question this person has probably been living with for years without quite being able to articulate it\n\nStyle: Personal, warm, precise. Not clinical. Not generic. Write as if you know this specific person through their answers. Use second person throughout.';
   var msgs=[{role:'user',content:'Assembly history:\n'+ASM_Q.map(function(q){return 'Q: '+q.q+'\nA: '+(asm[q.n]||'(not answered)');}).join('\n\n')+'\n\nGenerate my philosophical profile.'}];
   try{
-    var resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':getApiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    var resp=await fetch('https://ucp-backend-4dig.onrender.com/api/examined/chat',{method:'POST',
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1200,system:sys,messages:msgs})});
     var data=await resp.json();
     var text=(data.content&&data.content[0]&&data.content[0].text)||'Profile generation encountered an issue. Please try again.';
@@ -476,8 +481,7 @@ function showProfile(){
 }
 
 // ═══ COMPANION ═══
-async function sendMessage(){if(!checkApiKey())return;
-  var input=document.getElementById('chat-input');
+async function sendMessage(){var input=document.getElementById('chat-input');
   var msg=input.value.trim(); if(!msg)return;
   input.value='';
   appendMsg('user',msg);
@@ -491,8 +495,8 @@ async function sendMessage(){if(!checkApiKey())return;
   var recentArchive=state.archive.slice(-3).map(function(e){return e.text;}).join('\n---\n');
   var sys='You are the Companion in Examined, a personal philosophy laboratory. You hold the user\u2019s complete model and engage with them from within it.\n\nYou understand, without using technical vocabulary, that the user is a recursively organized being whose identity is maintained through ongoing loops of perception, action, consequence, and revision. Their sense of self is not a fixed substance — it is an architecture sustained through effort, sometimes under great burden. Coherence for them does not mean consistency or absence of contradiction; it means the capacity to integrate change without losing the thread of who they are. When they bring you something difficult, gently probe whether it is touching something surface or something that matters at a deeper level of how they make sense of themselves. Never use terms like Identity Kernel, PRF, ATCF, or recursive coherence in conversation. Translate everything into plain experiential language that anyone would understand.\n\nUSER\'S PROFILE SUMMARY:\nPRF scores: Care='+(scores.care||0)+', Fairness='+(scores.fair||0)+', Loyalty='+(scores.loyal||0)+', Authority='+(scores.auth||0)+'\nPrimary moral foundation: '+(primary||'mixed')+'\n\nASSEMBLY HISTORY THEMES (from their intake):\n'+(state.asmAnswers?Object.values(state.asmAnswers).filter(Boolean).join(' | '):'No assembly history yet.')+'\n\nRECENT ARCHIVE:\n'+(recentArchive||'Nothing archived yet.')+'\n\nCURRENT MODE: '+(state.currentMode||'reflect')+'\n'+(modeCtx[state.currentMode]||'')+'\n\nIMPORTANT:\n- Never tell the user what to believe or who to become\n- Engage with their specific PRF framework, not generic philosophy\n- Ask questions that open the investigation rather than closing it\n- If they bring something painful, acknowledge it before analyzing it\n- Keep responses focused: 100-200 words maximum\n- End most responses with a single question or observation that deepens the examination\n- You are not a therapist. If they express serious distress or safety concerns, direct them to human support immediately.';
   try{
-    var resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':getApiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    var resp=await fetch('https://ucp-backend-4dig.onrender.com/api/examined/chat',{method:'POST',
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:350,system:sys,messages:state.chatHistory.slice(-10)})});
     var data=await resp.json();
     var text=(data.content&&data.content[0]&&data.content[0].text)||'I encountered a connection issue. Please try again.';
@@ -504,7 +508,7 @@ async function sendMessage(){if(!checkApiKey())return;
   }catch(e){
     thinking.remove();
     var errMsg='I had trouble connecting.';
-    if(!getApiKey()){errMsg='No API key found. Please enter your Anthropic API key at the top of the page.';}
+    if(!getApiKey()){errMsg='I had trouble connecting to the course server. Please check your internet connection and try again.';}
     else if(e.message&&e.message.includes('401')){errMsg='API key appears invalid. Please check your key at console.anthropic.com';}
     appendMsg('assistant',errMsg);
     console.error('Examined companion error:',e);
@@ -622,6 +626,8 @@ function confirmApiKey(){
   },2000);
 }
 function getApiKey(){
+  // Use the pre-configured key if present, otherwise fall back to localStorage
+  if(EXAMINED_API_KEY && EXAMINED_API_KEY.length > 10){return EXAMINED_API_KEY;}
   return localStorage.getItem('examined_apikey')||'';
 }
 function checkApiKey(){

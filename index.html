@@ -187,8 +187,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
       <p class="phase-desc">Two steps, fifteen minutes. First, twenty-two scenario questions that map your moral architecture. Then, six questions about your life and how you became who you are. Together they generate a personal philosophical profile that describes not just your values but your specific way of inhabiting them.</p>
       <div class="panel teal">Your profile is stored only in this browser. Nothing leaves your device without your explicit action.</div>
       <div id="no-key-notice" style="display:none;background:#fef3c7;border:1px solid #92400e;border-left:4px solid #92400e;border-radius:.4rem;padding:.9rem 1.1rem;margin:.75rem 0;font-size:.88rem;color:#1a1612;line-height:1.7">
-        <strong>Profile generation is not yet configured.</strong><br>
-        The API connection for this trial has not been set up. Please contact your instructor to activate the tool.
+        <strong>Connection issue.</strong><br>
+        Cannot reach the course server. Please check your internet connection, wait 30 seconds (the server may be waking up), and try the "Test API connection" button.
       </div>
       <div style="margin-top:1.25rem;display:flex;gap:.65rem;flex-wrap:wrap;align-items:center">
         <button class="btn" onclick="startAssessment()">Begin the assessment &rarr;</button>
@@ -324,10 +324,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 
 <script>
 // ═══ CONFIGURATION ═══════════════════════════════════════════
-// Paste your Anthropic API key between the quotes below.
-// Get a key at console.anthropic.com → API Keys
-// Set a spending cap at console.anthropic.com → Billing → Usage limits
-var EXAMINED_API_KEY = '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';
+// API calls are handled by the UCP backend proxy.
+// No API key needed in this file.
+// To update the API key, set ANTHROPIC_API_KEY in Render dashboard.
 // ═════════════════════════════════════════════════════════════
 
 // ═══ STATE ═══
@@ -347,49 +346,61 @@ function saveState(){localStorage.setItem('examined_v2',JSON.stringify(state));}
 loadState();
 
 // ═══ API ═══
-function getApiKey(){
-  if(EXAMINED_API_KEY&&EXAMINED_API_KEY.trim().length>10)return EXAMINED_API_KEY.trim();
-  return localStorage.getItem('examined_apikey')||'';
-}
+// API key managed server-side via proxy
+
 async function callClaude(system,messages,maxTokens){
-  var key=getApiKey().trim().replace(/[\s"']/g,'');
-  console.log('[Examined] API call - key starts with:',key.substring(0,12),'..., length:',key.length);
-  if(!key||key.length<20){
-    var notice=document.getElementById('no-key-notice');
-    if(notice)notice.style.display='block';
-    var loading=document.getElementById('profile-loading');
-    if(loading&&loading.style.display!=='none'){showEl('profile-start');var n2=document.getElementById('no-key-notice');if(n2)n2.style.display='block';}
-    throw new Error('No API key');
-  }
+  // Uses the UCP backend proxy — API key is stored securely on the server
+  var PROXY = 'https://ucp-backend-4dig.onrender.com/api/claude-proxy';
+  console.log('[Examined] Calling proxy...');
   var resp;
   try{
-    resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'x-api-key':key,
-        'anthropic-version':'2023-06-01',
-        'anthropic-dangerous-direct-browser-access':'true'
-      },
-      body:JSON.stringify({
-        model:'claude-sonnet-4-6',
-        max_tokens:maxTokens||1200,
-        system:system,
-        messages:messages
+    resp = await fetch(PROXY, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: maxTokens || 1200,
+        system: system,
+        messages: messages
       })
     });
-  }catch(networkErr){
-    console.error('[Examined] Network/CORS error:',networkErr);
-    throw new Error('NETWORK_ERROR: '+networkErr.message);
+  } catch(networkErr){
+    console.error('[Examined] Network error:', networkErr);
+    throw new Error('NETWORK_ERROR: ' + networkErr.message);
   }
   if(!resp.ok){
-    var errBody=await resp.text();
-    console.error('[Examined] HTTP',resp.status,'error:',errBody);
-    throw new Error('HTTP_'+resp.status+': '+errBody);
+    var errBody = await resp.text();
+    console.error('[Examined] Proxy error', resp.status, errBody);
+    throw new Error('HTTP_' + resp.status + ': ' + errBody);
   }
-  var data=await resp.json();
-  console.log('[Examined] API call successful');
-  return(data.content&&data.content[0]&&data.content[0].text)||'';
+  var data = await resp.json();
+  console.log('[Examined] Call successful');
+  return (data.content && data.content[0] && data.content[0].text) || '';
+}
+
+async function testApiKey(){
+  var btn = document.getElementById('test-key-btn');
+  var result = document.getElementById('test-key-result');
+  if(btn) btn.disabled = true;
+  if(result){result.style.display='block'; result.textContent='Testing connection...';}
+  try{
+    var text = await callClaude('Reply with exactly: CONNECTION_OK', [{role:'user',content:'test'}], 20);
+    if(result){
+      result.style.background='#dcfce7'; result.style.borderColor='#14532d'; result.style.color='#14532d';
+      result.textContent = '\u2713 Connection working. Profile generation is ready.';
+    }
+  } catch(e){
+    console.error('[Examined] Test failed:', e);
+    var msg = '\u2717 ';
+    if(e.message.includes('NETWORK_ERROR')) msg += 'Cannot reach the server. Check your internet connection.';
+    else if(e.message.includes('HTTP_5')) msg += 'Server error. The UCP backend may be waking up (give it 30 seconds and try again).';
+    else msg += 'Error: ' + e.message;
+    if(result){
+      result.style.background='#fee2e2'; result.style.borderColor='#7f1d1d'; result.style.color='#7f1d1d';
+      result.textContent = msg;
+    }
+  }
+  if(btn) btn.disabled = false;
 }
 
 // Test the API key with a minimal call

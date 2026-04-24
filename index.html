@@ -190,7 +190,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
         <strong>Profile generation is not yet configured.</strong><br>
         The API connection for this trial has not been set up. Please contact your instructor to activate the tool.
       </div>
-      <button class="btn" onclick="startAssessment()" style="margin-top:1rem">Begin the assessment &rarr;</button>
+      <div style="margin-top:1.25rem;display:flex;gap:.65rem;flex-wrap:wrap;align-items:center">
+        <button class="btn" onclick="startAssessment()">Begin the assessment &rarr;</button>
+        <button class="btn btn-out" id="test-key-btn" onclick="testApiKey()" style="font-size:.82rem">Test API connection</button>
+      </div>
+      <div id="test-key-result" style="display:none;margin-top:.65rem;padding:.65rem .9rem;border-radius:.35rem;border:1px solid;font-size:.84rem;line-height:1.6;font-family:'DM Mono',monospace"></div>
     </div>
 
     <!-- 1: PRF22 -->
@@ -323,7 +327,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 // Paste your Anthropic API key between the quotes below.
 // Get a key at console.anthropic.com → API Keys
 // Set a spending cap at console.anthropic.com → Billing → Usage limits
-var EXAMINED_API_KEY = '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';
+var EXAMINED_API_KEY = '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';
 // ═════════════════════════════════════════════════════════════
 
 // ═══ STATE ═══
@@ -348,40 +352,73 @@ function getApiKey(){
   return localStorage.getItem('examined_apikey')||'';
 }
 async function callClaude(system,messages,maxTokens){
-  var key=getApiKey();
-  if(!key){
+  var key=getApiKey().trim().replace(/[\s"']/g,'');
+  console.log('[Examined] API call - key starts with:',key.substring(0,12),'..., length:',key.length);
+  if(!key||key.length<20){
     var notice=document.getElementById('no-key-notice');
     if(notice)notice.style.display='block';
-    // Also show in loading state if we are there
     var loading=document.getElementById('profile-loading');
-    if(loading&&loading.style.display!=='none'){
-      showEl('profile-start');
-      var n2=document.getElementById('no-key-notice');
-      if(n2)n2.style.display='block';
-    }
+    if(loading&&loading.style.display!=='none'){showEl('profile-start');var n2=document.getElementById('no-key-notice');if(n2)n2.style.display='block';}
     throw new Error('No API key');
   }
-  var resp=await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{
-      'Content-Type':'application/json',
-      'x-api-key':key,
-      'anthropic-version':'2023-06-01',
-      'anthropic-dangerous-direct-browser-access':'true'
-    },
-    body:JSON.stringify({
-      model:'claude-sonnet-4-6',
-      max_tokens:maxTokens||1200,
-      system:system,
-      messages:messages
-    })
-  });
+  var resp;
+  try{
+    resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':key,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-sonnet-4-6',
+        max_tokens:maxTokens||1200,
+        system:system,
+        messages:messages
+      })
+    });
+  }catch(networkErr){
+    console.error('[Examined] Network/CORS error:',networkErr);
+    throw new Error('NETWORK_ERROR: '+networkErr.message);
+  }
   if(!resp.ok){
-    var err=await resp.text();
-    throw new Error('API error '+resp.status+': '+err);
+    var errBody=await resp.text();
+    console.error('[Examined] HTTP',resp.status,'error:',errBody);
+    throw new Error('HTTP_'+resp.status+': '+errBody);
   }
   var data=await resp.json();
+  console.log('[Examined] API call successful');
   return(data.content&&data.content[0]&&data.content[0].text)||'';
+}
+
+// Test the API key with a minimal call
+async function testApiKey(){
+  var btn=document.getElementById('test-key-btn');
+  var result=document.getElementById('test-key-result');
+  if(btn)btn.disabled=true;
+  if(result){result.style.display='block';result.textContent='Testing...';}
+  try{
+    var text=await callClaude('You are a test assistant. Reply with exactly: KEY_OK',
+      [{role:'user',content:'test'}],20);
+    if(result){
+      result.style.background='#dcfce7';result.style.borderColor='#14532d';result.style.color='#14532d';
+      result.textContent='\u2713 API key is working. Profile generation is ready.';
+    }
+  }catch(e){
+    console.error('[Examined] Key test failed:',e);
+    var msg='\u2717 ';
+    if(e.message.includes('No API'))msg+='No API key found. Check the EXAMINED_API_KEY variable in the file.';
+    else if(e.message.includes('HTTP_401'))msg+='Key rejected (401). The key may be invalid, expired, or have no billing. Check console.anthropic.com.';
+    else if(e.message.includes('HTTP_429'))msg+='Rate limit hit. Wait a moment and try again.';
+    else if(e.message.includes('NETWORK_ERROR'))msg+='Network/CORS error. This usually means the browser blocked the request. Try opening the HTML file directly rather than via GitHub Pages, or set up the proxy.';
+    else msg+='Error: '+e.message+'. Open browser DevTools (F12) Console tab for details.';
+    if(result){
+      result.style.background='#fee2e2';result.style.borderColor='#7f1d1d';result.style.color='#7f1d1d';
+      result.textContent=msg;
+    }
+  }
+  if(btn)btn.disabled=false;
 }
 
 // ═══ PRF DATA ═══
@@ -540,11 +577,20 @@ async function generateProfile(){
     renderProfile();
   }catch(e){
     showEl('profile-assembly');
-    var msg='Profile generation failed.\n\n';
-    if(e.message.includes('401'))msg+='The API key appears invalid. Please contact your instructor.';
-    else if(e.message.includes('No API'))msg+='No API key found. Please contact your instructor.';
-    else msg+='Please check your internet connection and try again.\n\nError: '+e.message;
-    alert(msg);
+    var notice=document.getElementById('no-key-notice');
+    if(e.message.includes('No API')&&notice){notice.style.display='block';}
+    var errDiv=document.getElementById('gen-error-notice');
+    if(!errDiv){
+      errDiv=document.createElement('div');errDiv.id='gen-error-notice';
+      errDiv.style.cssText='background:#fee2e2;border:1px solid #7f1d1d;border-left:4px solid #7f1d1d;border-radius:.4rem;padding:.9rem 1.1rem;margin:.75rem 0;font-size:.84rem;color:#1a1612;line-height:1.7;font-family:"DM Mono",monospace';
+      var asmBtn=document.getElementById('asm-btn');
+      if(asmBtn&&asmBtn.parentNode)asmBtn.parentNode.insertBefore(errDiv,asmBtn);
+    }
+    errDiv.style.display='block';
+    if(e.message.includes('HTTP_401'))errDiv.textContent='\u2717 API key rejected (401 error). Use the "Test API connection" button on the previous screen to diagnose. Check console.anthropic.com to verify the key is active.';
+    else if(e.message.includes('NETWORK_ERROR'))errDiv.textContent='\u2717 Network error: the browser blocked the API request (CORS). See below for the proxy solution.';
+    else if(e.message.includes('No API'))errDiv.textContent='\u2717 No API key configured. Please contact your instructor.';
+    else errDiv.textContent='\u2717 Error: '+e.message+'. Open browser DevTools (F12 \u2192 Console) for details.';
     console.error('Examined profile error:',e);
   }
 }

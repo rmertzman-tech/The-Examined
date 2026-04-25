@@ -170,6 +170,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 <!-- WORKSPACE -->
 <div class="workspace" id="workspace">
   <div class="nav-tabs">
+    <!-- Persistent guide: shown after profile generated -->
+    <button id="guide-btn" onclick="showGuide()" title="How to use Examined" style="display:none;position:absolute;right:.75rem;top:.75rem;background:transparent;border:1px solid rgba(13,94,87,.3);color:#0D5E57;border-radius:50%;width:1.6rem;height:1.6rem;font-size:.8rem;cursor:pointer;z-index:10;font-family:'DM Mono',monospace;line-height:1;padding:0">?</button>
     <button class="ntb active" onclick="swTab('profile')">My Profile</button>
     <button class="ntb" onclick="swTab('twin')">My Twin</button>
     <button class="ntb" onclick="swTab('companion')">Companion</button>
@@ -235,6 +237,102 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
     <div id="profile-result" style="display:none">
       <div class="phase-lbl">Your Profile</div>
       <div class="profile-card" id="profile-card-content"></div>
+
+      <!-- WHAT TO DO NEXT: appears after profile generation -->
+      <div id="next-steps-panel" style="margin:1rem 0;border:2px solid #0D5E57;border-radius:.5rem;overflow:hidden">
+        <div style="background:#0D5E57;padding:.65rem 1rem;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleNextSteps()">
+          <span style="font-family:'DM Mono',monospace;font-size:.65rem;color:#fff;text-transform:uppercase;letter-spacing:.1em">What to do next — a guided start</span>
+          <span id="next-steps-chevron" style="color:#fff;font-size:.85rem;transition:transform .2s">▾</span>
+        </div>
+        <div id="next-steps-body" style="background:#f8f6f1;padding:0">
+
+          <!-- Step 1 -->
+          <div class="nxt-step" style="padding:.85rem 1rem;border-bottom:1px solid rgba(13,94,87,.12)">
+            <div style="display:flex;gap:.75rem;align-items:flex-start">
+              <div style="background:#0D5E57;color:#fff;font-family:'DM Mono',monospace;font-size:.7rem;border-radius:50%;width:1.4rem;height:1.4rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:.1rem">1</div>
+              <div>
+                <div style="font-weight:500;font-size:.9rem;margin-bottom:.2rem">Read your profile slowly</div>
+                <div style="font-size:.83rem;color:rgba(26,22,18,.65);line-height:1.6">Notice what feels precisely right, and what feels slightly off or missing. Both are useful. The profile is a first approximation, not a final word. The parts that miss you are where your examination has the most territory to explore.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="nxt-step" style="padding:.85rem 1rem;border-bottom:1px solid rgba(13,94,87,.12)">
+            <div style="display:flex;gap:.75rem;align-items:flex-start">
+              <div style="background:#0D5E57;color:#fff;font-family:'DM Mono',monospace;font-size:.7rem;border-radius:50%;width:1.4rem;height:1.4rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:.1rem">2</div>
+              <div>
+                <div style="font-weight:500;font-size:.9rem;margin-bottom:.2rem">Bring something real to the Companion</div>
+                <div style="font-size:.83rem;color:rgba(26,22,18,.65);line-height:1.6">The Companion is not a chatbot and not a therapist. It holds your specific model and helps you think from within it. <strong>Reflect mode</strong> is the best starting point: bring a real situation — a decision you are navigating, a tension you are living with, something that is pulling you in two directions. The Companion will engage with it using your actual framework, not a generic one.</div>
+                <button class="btn btn-sm" onclick="swTab('companion');setMode('reflect')" style="margin-top:.55rem;font-size:.8rem;padding:.38rem .9rem">Open Companion in Reflect mode →</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="nxt-step" style="padding:.85rem 1rem;border-bottom:1px solid rgba(13,94,87,.12)">
+            <div style="display:flex;gap:.75rem;align-items:flex-start">
+              <div style="background:#5B21B6;color:#fff;font-family:'DM Mono',monospace;font-size:.7rem;border-radius:50%;width:1.4rem;height:1.4rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:.1rem">3</div>
+              <div>
+                <div style="font-weight:500;font-size:.9rem;margin-bottom:.2rem">Explore forward or backward</div>
+                <div style="font-size:.83rem;color:rgba(26,22,18,.65);line-height:1.6"><strong>Explore mode</strong> takes you forward: a decision you haven’t made yet, a future you are trying to imagine, a possibility you want to think through before committing to it. <strong>Experiment mode</strong> takes you backward: a choice you have already made that you want to understand better, a counterfactual, a moment from your past that still shapes how you see things now. Use whichever matches what is live for you.</div>
+                <div style="display:flex;gap:.4rem;margin-top:.55rem;flex-wrap:wrap">
+                  <button class="btn btn-sm" onclick="swTab('companion');setMode('explore')" style="font-size:.8rem;padding:.38rem .9rem">Explore forward →</button>
+                  <button class="btn btn-out btn-sm" onclick="swTab('companion');setMode('experiment')" style="font-size:.8rem;padding:.38rem .9rem">Experiment backward →</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="nxt-step" style="padding:.85rem 1rem;border-bottom:1px solid rgba(13,94,87,.12)">
+            <div style="display:flex;gap:.75rem;align-items:flex-start">
+              <div style="background:#0D5E57;color:#fff;font-family:'DM Mono',monospace;font-size:.7rem;border-radius:50%;width:1.4rem;height:1.4rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:.1rem">4</div>
+              <div>
+                <div style="font-weight:500;font-size:.9rem;margin-bottom:.2rem">Archive what matters</div>
+                <div style="font-size:.83rem;color:rgba(26,22,18,.65);line-height:1.6">After a Companion exchange that felt significant — where something clicked, or where you saw something you hadn’t seen before — save it to the archive. The archive is the beginning of a longitudinal record of your examination. Over time it becomes more valuable than any single session. The profile revision at 90 days uses archived exchanges as additional context.</div>
+                <button class="btn btn-out btn-sm" onclick="swTab('archive')" style="margin-top:.55rem;font-size:.8rem;padding:.38rem .9rem">See the archive →</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 5 -->
+          <div class="nxt-step" style="padding:.85rem 1rem;border-bottom:1px solid rgba(13,94,87,.12)">
+            <div style="display:flex;gap:.75rem;align-items:flex-start">
+              <div style="background:#92400e;color:#fff;font-family:'DM Mono',monospace;font-size:.7rem;border-radius:50%;width:1.4rem;height:1.4rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:.1rem">5</div>
+              <div>
+                <div style="font-weight:500;font-size:.9rem;margin-bottom:.2rem">Check in when something changes</div>
+                <div style="font-size:.83rem;color:rgba(26,22,18,.65);line-height:1.6">The six-domain coherence check-in is not a daily obligation. Use it when you notice something shifting — when your energy is low, when a situation is consuming more than it should, when you feel less like yourself than usual, or when something has gone better than expected and you want to notice why. The trajectory over time is more informative than any single reading.</div>
+                <button class="btn btn-out btn-sm" onclick="swTab('coherence')" style="margin-top:.55rem;font-size:.8rem;padding:.38rem .9rem">Coherence check-in →</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 6: When depleted -->
+          <div class="nxt-step" style="padding:.85rem 1rem;border-bottom:1px solid rgba(13,94,87,.12)">
+            <div style="display:flex;gap:.75rem;align-items:flex-start">
+              <div style="background:#0D5E57;color:#fff;font-family:'DM Mono',monospace;font-size:.7rem;border-radius:50%;width:1.4rem;height:1.4rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:.1rem">6</div>
+              <div>
+                <div style="font-weight:500;font-size:.9rem;margin-bottom:.2rem">When you can’t examine — recover first</div>
+                <div style="font-size:.83rem;color:rgba(26,22,18,.65);line-height:1.6">There are moments when asking deeper questions costs more than it gives. When you’re exhausted, overwhelmed, or feel like everything is too much, the Companion’s <strong>Recover mode</strong> helps you reduce load before returning to examination. Low coherence is not failure. It is information about what you need. Recovery Mode identifies the kind of burden you are carrying and offers specific next steps calibrated to that burden at whatever depth feels possible.</div>
+                <button class="btn btn-sm" onclick="swTab('companion');setMode('recover')" style="margin-top:.55rem;font-size:.8rem;padding:.38rem .9rem;background:#0D5E57">Recover mode →</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- The longer view -->
+          <div class="nxt-step" style="padding:.85rem 1rem;background:rgba(13,94,87,.04)">
+            <div style="display:flex;gap:.75rem;align-items:flex-start">
+              <div style="color:#0D5E57;font-size:1.1rem;flex-shrink:0;margin-top:.1rem">∞</div>
+              <div>
+                <div style="font-weight:500;font-size:.9rem;margin-bottom:.2rem">The longer view</div>
+                <div style="font-size:.83rem;color:rgba(26,22,18,.65);line-height:1.6">The profile becomes more precise as you use the Companion and archive significant exchanges. At 90 days, a revised profile uses everything you’ve archived as additional context — the model grows with you. The examined life is not a one-time event. It is a practice. This app is infrastructure for that practice — not a replacement for the thinking, only a space that makes the thinking more possible.</div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /next-steps-body -->
+      </div><!-- /next-steps-panel -->
       <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.75rem">
         <button class="btn" onclick="swTab('companion')">Open the Companion &rarr;</button>
         <button class="btn btn-out" onclick="exportProfile()">&#11015; Export profile</button>
@@ -716,6 +814,7 @@ function renderProfile(){
 function showProfileResult(){
   showEl('profile-result');
   renderProfile();
+  updateGuideBtn();
 }
 function resetProfile(){
   if(!confirm('This will clear your current profile and restart the assessment. Your archive and coherence history will be preserved. Continue?'))return;
@@ -1246,6 +1345,71 @@ window.setMode=function(m){
     resetRecovery();
   }
 };
+
+
+// ── ONBOARDING GUIDE ─────────────────────────────────────────────────
+function toggleNextSteps(){
+  var body=document.getElementById('next-steps-body');
+  var chev=document.getElementById('next-steps-chevron');
+  if(!body) return;
+  var open=body.style.maxHeight!=='0px'&&body.style.maxHeight!=='';
+  if(open){
+    body.style.maxHeight='0px';body.style.overflow='hidden';body.style.padding='0';
+    if(chev) chev.style.transform='rotate(-90deg)';
+  } else {
+    body.style.maxHeight='';body.style.overflow='';
+    if(chev) chev.style.transform='';
+  }
+}
+
+function showGuide(){
+  // Navigate to profile tab and scroll to next-steps panel
+  swTab('profile');
+  setTimeout(function(){
+    var panel=document.getElementById('next-steps-panel');
+    if(panel){
+      panel.scrollIntoView({behavior:'smooth',block:'start'});
+      // Make sure it is open
+      var body=document.getElementById('next-steps-body');
+      if(body){body.style.maxHeight='';body.style.overflow='';}
+      var chev=document.getElementById('next-steps-chevron');
+      if(chev) chev.style.transform='';
+    }
+  },200);
+}
+
+// Show guide button once profile exists
+function updateGuideBtn(){
+  var btn=document.getElementById('guide-btn');
+  if(btn) btn.style.display=state.profile?'block':'none';
+}
+
+// ── MODE TOOLTIPS: show on hover for each mode button ─────────────────
+var MODE_TIPS={
+  explore:'Forward mode: a decision ahead, a future to imagine, a possibility to think through before committing.',
+  experiment:'Backward mode: a past choice to understand, a counterfactual, a moment that still shapes you.',
+  reflect:'Present mode: a real situation right now — a tension, a difficulty, a success, a regret.',
+  recover:'Recovery mode: when you need to reduce load before examining. Low coherence is not failure — it is information.'
+};
+
+(function(){
+  ['explore','experiment','reflect','recover'].forEach(function(k){
+    var btn=document.getElementById('mode-'+k);
+    if(!btn) return;
+    var tip=document.createElement('div');
+    tip.style.cssText='position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);'
+      +'background:#1a1612;color:#fff;font-size:.74rem;padding:.4rem .65rem;border-radius:.3rem;'
+      +'white-space:normal;max-width:220px;text-align:center;line-height:1.45;pointer-events:none;'
+      +'opacity:0;transition:opacity .15s;z-index:100;font-family:sans-serif';
+    tip.textContent=MODE_TIPS[k]||'';
+    btn.style.position='relative';
+    btn.appendChild(tip);
+    btn.addEventListener('mouseenter',function(){tip.style.opacity='1';});
+    btn.addEventListener('mouseleave',function(){tip.style.opacity='0';});
+    btn.addEventListener('touchstart',function(){tip.style.opacity='1';
+      setTimeout(function(){tip.style.opacity='0';},2200);},{passive:true});
+  });
+})();
 
 </script>
 </body>

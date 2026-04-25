@@ -253,7 +253,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
               <div>
                 <div style="font-weight:500;font-size:.9rem;margin-bottom:.2rem">Read your profile slowly</div>
                 <div style="font-size:.83rem;color:rgba(26,22,18,.65);line-height:1.6">Notice what feels precisely right, and what feels slightly off or missing. Both are useful. The profile is a first approximation, not a final word. The parts that miss you are where your examination has the most territory to explore.</div>
-                <button class="btn btn-out btn-sm" onclick="resetProfile()" style="margin-top:.55rem;font-size:.8rem;padding:.38rem .9rem;border-color:#0D5E57;color:#0D5E57">&#9998; Add to or revise your answers</button>
+                <button class="btn btn-out btn-sm" onclick="enrichProfile()" style="margin-top:.55rem;font-size:.8rem;padding:.38rem .9rem;border-color:#0D5E57;color:#0D5E57">&#9998; Add to or revise your answers</button>
               </div>
             </div>
           </div>
@@ -338,8 +338,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
         <button class="btn" onclick="swTab('companion')">Open the Companion &rarr;</button>
         <button class="btn btn-out" onclick="exportProfile()">&#11015; Export profile</button>
       </div>
-      <div style="margin-top:1rem">
-        <button class="btn btn-out" onclick="resetProfile()" style="font-size:.8rem;border-color:#0D5E57;color:#0D5E57">&#9998; Deepen or regenerate profile</button>
+      <div style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-out" onclick="enrichProfile()" style="font-size:.82rem;padding:.45rem 1rem;border-color:#0D5E57;color:#0D5E57">&#9998; Add to my answers &amp; regenerate</button>
+        <button class="btn btn-out" onclick="fullResetProfile()" style="font-size:.82rem;padding:.45rem 1rem;color:rgba(26,22,18,.45);border-color:rgba(26,22,18,.2)">&#8635; Start completely over</button>
       </div>
     </div>
 
@@ -829,45 +830,43 @@ function showProfileResult(){
   renderProfile();
   updateGuideBtn();
 }
-function resetProfile(){
-  // Two-path reset: refine answers (keep PRF) or full restart
-  if(!state.asmAnswers||Object.keys(state.asmAnswers).length===0){
-    // No saved answers — must do full reset
-    if(!confirm('This will restart the full assessment. Continue?'))return;
-    state.profile=null;state.prfAnswers={};state.asmAnswers={};
-    state.prfScores={care:0,fair:0,loyal:0,auth:0};
-    saveState();buildAsmQuestions();showEl('profile-start');
-    return;
-  }
-  // Has saved answers — offer choice
-  var choice=confirm(
-    'Deepen your profile or start fresh?\n\n'+'OK → Return to your assembly history to add or revise your answers, then regenerate. '+'Your moral framework scores are preserved.\n\n'+'Cancel → Full restart — clears everything including the 22 scenario questions.'
-  );
-  if(choice){
-    // Enrich path: keep PRF scores, go back to assembly history pre-populated
-    state.profile=null;
-    saveState();
-    buildAsmQuestions();
-    // Update heading tone if this is a return visit
-    var hasAnswers=state.asmAnswers&&Object.keys(state.asmAnswers).some(function(k){return(state.asmAnswers[k]||'').length>10;});
-    var hTitle=document.querySelector('#profile-assembly .phase-title');
-    var hDesc=document.querySelector('#profile-assembly .phase-desc');
-    var hLabel=document.querySelector('#profile-assembly .phase-lbl');
-    if(hasAnswers&&hTitle)hTitle.textContent='Deepen your answers';
-    if(hasAnswers&&hDesc)hDesc.textContent='Your previous answers are shown below. Add, extend, or revise any of them. The more specific and detailed each response, the more precise the profile will be. Then regenerate.';
-    if(hasAnswers&&hLabel)hLabel.textContent='Return visit — enriching your model';
-    showEl('profile-assembly');
-    updateGuideBtn();
-    // Scroll to top of assembly section
+function enrichProfile(){
+  // Go back to assembly history with answers pre-populated
+  state.profile=null;
+  saveState();
+  buildAsmQuestions();
+  // Update headings for return visit
+  var hTitle=document.querySelector('#profile-assembly .phase-title');
+  var hDesc=document.querySelector('#profile-assembly .phase-desc');
+  var hLabel=document.querySelector('#profile-assembly .phase-lbl');
+  if(hTitle) hTitle.textContent='Deepen your answers';
+  if(hDesc)  hDesc.textContent='Your previous answers are shown below. Add to, extend, or revise any of them. The more specific and detailed each response, the more precise the profile. Click Generate when ready.';
+  if(hLabel) hLabel.textContent='Return visit — enriching your model';
+  showEl('profile-assembly');
+  updateGuideBtn();
+  setTimeout(function(){
     var el=document.getElementById('profile-assembly');
-    if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
-  } else {
-    // Full restart path
-    if(!confirm('Full restart will clear your PRF22 answers and all assembly history. '+'Your Companion archive and coherence history are preserved. Are you sure?'))return;
-    state.profile=null;state.prfAnswers={};state.asmAnswers={};
-    state.prfScores={care:0,fair:0,loyal:0,auth:0};
-    saveState();showEl('profile-start');
-  }
+    if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+  },80);
+}
+
+function fullResetProfile(){
+  if(!confirm('This will clear your PRF22 answers, all six assembly history responses, and your profile. Your Companion archive and coherence history are preserved. Are you sure you want to start completely over?')) return;
+  state.profile=null;
+  state.prfAnswers={};
+  state.asmAnswers={};
+  state.prfScores={care:0,fair:0,loyal:0,auth:0};
+  saveState();
+  showEl('profile-start');
+  updateGuideBtn();
+}
+
+function resetProfile(){
+  // Legacy hook — now routes to enrichProfile if answers exist, fullReset otherwise
+  var hasAnswers=state.asmAnswers&&Object.keys(state.asmAnswers).some(function(k){
+    return (state.asmAnswers[k]||'').length>10;
+  });
+  if(hasAnswers){ enrichProfile(); } else { fullResetProfile(); }
 }
 
 // ═══ COMPANION ═══

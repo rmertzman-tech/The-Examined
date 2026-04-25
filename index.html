@@ -274,8 +274,89 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
       <button class="btn btn-out" id="mode-explore" onclick="setMode('explore')" style="font-size:.78rem;padding:.35rem .75rem">Explore</button>
       <button class="btn btn-out" id="mode-experiment" onclick="setMode('experiment')" style="font-size:.78rem;padding:.35rem .75rem">Experiment</button>
       <button class="btn btn-out" id="mode-reflect" onclick="setMode('reflect')" style="font-size:.78rem;padding:.35rem .75rem">Reflect</button>
+      <button class="btn btn-out" id="mode-recover" onclick="setMode('recover')" style="font-size:.78rem;padding:.35rem .75rem;border-color:#0D5E57;color:#0D5E57">Recover</button>
     </div>
     <div id="mode-desc" class="panel teal" style="font-size:.84rem;margin-bottom:.75rem">Select a mode above, or simply begin a conversation.</div>
+
+    <!-- RECOVERY PANEL -->
+    <div id="recovery-panel" style="display:none;margin-bottom:.75rem">
+      <div style="background:linear-gradient(135deg,#e8f4f2,#f8f6f1);border:2px solid #0D5E57;border-radius:.5rem;padding:1.1rem 1.25rem;margin-bottom:.65rem">
+        <div style="font-family:'DM Mono',monospace;font-size:.6rem;color:#0D5E57;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.35rem">Current Load</div>
+        <div style="display:flex;align-items:center;gap:1rem">
+          <div id="load-meter" style="flex:1;height:8px;background:#e4dfd4;border-radius:4px;overflow:hidden">
+            <div id="load-fill" style="height:100%;background:#0D5E57;border-radius:4px;transition:width .6s ease;width:0%"></div>
+          </div>
+          <div id="load-label" style="font-family:'DM Mono',monospace;font-size:.85rem;color:#0D5E57;font-weight:500;white-space:nowrap">Calculate</div>
+        </div>
+        <div id="load-message" style="font-size:.78rem;color:rgba(26,22,18,.6);margin-top:.4rem;line-height:1.5"></div>
+      </div>
+
+      <!-- Step 1: Burden Type -->
+      <div id="rec-step1" style="background:#fff;border:1px solid rgba(60,50,30,.12);border-radius:.45rem;padding:1rem;margin-bottom:.65rem">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-style:italic;margin-bottom:.6rem;color:#1a1612">What kind of burden feels strongest right now?</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem">
+          <button class="rec-burden-btn" onclick="selectBurden('body')" style="text-align:left;padding:.6rem .8rem;border:1px solid rgba(60,50,30,.15);border-radius:.35rem;background:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.84rem;transition:all .15s">
+            <span style="font-family:'DM Mono',monospace;font-size:.62rem;color:#0D5E57;display:block;margin-bottom:.15rem">BODY</span>
+            Tired, tense, physically depleted
+          </button>
+          <button class="rec-burden-btn" onclick="selectBurden('time')" style="text-align:left;padding:.6rem .8rem;border:1px solid rgba(60,50,30,.15);border-radius:.35rem;background:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.84rem;transition:all .15s">
+            <span style="font-family:'DM Mono',monospace;font-size:.62rem;color:#0D5E57;display:block;margin-bottom:.15rem">TIME</span>
+            Everything feels urgent at once
+          </button>
+          <button class="rec-burden-btn" onclick="selectBurden('relationship')" style="text-align:left;padding:.6rem .8rem;border:1px solid rgba(60,50,30,.15);border-radius:.35rem;background:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.84rem;transition:all .15s">
+            <span style="font-family:'DM Mono',monospace;font-size:.62rem;color:#0D5E57;display:block;margin-bottom:.15rem">RELATIONSHIP</span>
+            Conflict, loneliness, or pressure from others
+          </button>
+          <button class="rec-burden-btn" onclick="selectBurden('structure')" style="text-align:left;padding:.6rem .8rem;border:1px solid rgba(60,50,30,.15);border-radius:.35rem;background:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.84rem;transition:all .15s">
+            <span style="font-family:'DM Mono',monospace;font-size:.62rem;color:#0D5E57;display:block;margin-bottom:.15rem">STRUCTURE</span>
+            Confusion, overload, no clear path
+          </button>
+          <button class="rec-burden-btn" onclick="selectBurden('identity')" style="text-align:left;padding:.6rem .8rem;border:1px solid rgba(60,50,30,.15);border-radius:.35rem;background:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.84rem;transition:all .15s;grid-column:1/-1">
+            <span style="font-family:'DM Mono',monospace;font-size:.62rem;color:#0D5E57;display:block;margin-bottom:.15rem">IDENTITY</span>
+            I don&apos;t feel like myself right now
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Recovery Depth -->
+      <div id="rec-step2" style="display:none;background:#fff;border:1px solid rgba(60,50,30,.12);border-radius:.45rem;padding:1rem;margin-bottom:.65rem">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-style:italic;margin-bottom:.6rem;color:#1a1612">What level of help feels possible right now?</div>
+        <div style="display:flex;flex-direction:column;gap:.4rem">
+          <button class="rec-depth-btn" onclick="selectDepth('one_minute')" style="text-align:left;padding:.65rem .9rem;border:1px solid rgba(60,50,30,.15);border-radius:.35rem;background:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.84rem;transition:all .15s">
+            <span style="font-weight:500">One-minute reset</span> <span style="color:rgba(26,22,18,.5);font-size:.8rem">&mdash; one small action, then continue</span>
+          </button>
+          <button class="rec-depth-btn" onclick="selectDepth('five_minute')" style="text-align:left;padding:.65rem .9rem;border:1px solid rgba(60,50,30,.15);border-radius:.35rem;background:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.84rem;transition:all .15s">
+            <span style="font-weight:500">Five-minute recovery plan</span> <span style="color:rgba(26,22,18,.5);font-size:.8rem">&mdash; reduce load, restore capacity</span>
+          </button>
+          <button class="rec-depth-btn" onclick="selectDepth('conversation')" style="text-align:left;padding:.65rem .9rem;border:1px solid rgba(60,50,30,.15);border-radius:.35rem;background:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.84rem;transition:all .15s">
+            <span style="font-weight:500">Reflective conversation</span> <span style="color:rgba(26,22,18,.5);font-size:.8rem">&mdash; work through it with the Companion</span>
+          </button>
+          <button class="rec-depth-btn" onclick="selectDepth('save_for_later')" style="text-align:left;padding:.65rem .9rem;border:1px solid rgba(60,50,30,.15);border-radius:.35rem;background:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.84rem;transition:all .15s">
+            <span style="font-weight:500">Save this for later</span> <span style="color:rgba(26,22,18,.5);font-size:.8rem">&mdash; note it and return when I have capacity</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 3: Recovery Actions -->
+      <div id="rec-step3" style="display:none;background:#fff;border:1px solid rgba(60,50,30,.12);border-radius:.45rem;padding:1rem;margin-bottom:.65rem">
+        <div id="rec-prompt" style="font-family:'Cormorant Garamond',serif;font-size:1rem;font-style:italic;color:rgba(26,22,18,.65);margin-bottom:.65rem;line-height:1.6"></div>
+        <div id="rec-actions" style="display:flex;flex-direction:column;gap:.35rem"></div>
+        <div style="margin-top:.75rem;display:flex;gap:.5rem;flex-wrap:wrap">
+          <button class="btn btn-sm" id="rec-note-btn" onclick="generateRecoveryNote()" style="font-size:.82rem;padding:.45rem 1rem">Generate Recovery Note</button>
+          <button class="btn btn-out btn-sm" onclick="resetRecovery()" style="font-size:.82rem;padding:.45rem 1rem">Different burden</button>
+        </div>
+      </div>
+
+      <!-- Recovery Note Output -->
+      <div id="rec-note-output" style="display:none;background:linear-gradient(135deg,#f8f6f1,#eeeae1);border:1px solid rgba(13,94,87,.2);border-radius:.45rem;padding:1rem;margin-bottom:.65rem">
+        <div style="font-family:'DM Mono',monospace;font-size:.6rem;color:#0D5E57;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem">Recovery Note</div>
+        <div id="rec-note-text" style="font-size:.88rem;line-height:1.75;color:#1a1612"></div>
+        <div style="margin-top:.65rem;display:flex;gap:.5rem">
+          <button class="btn btn-out btn-sm" onclick="archiveRecoveryNote()" style="font-size:.8rem;padding:.38rem .8rem">&#128190; Save to archive</button>
+        </div>
+      </div>
+    </div>
+
     <div class="chat-container">
       <div class="chat-messages" id="chat-messages">
         <div class="msg assistant">Welcome. I am your Companion &mdash; part of the Examined system that holds your model and thinks alongside you. I know your profile and something of your assembly history. I will not tell you what to think or who to become. My role is to help you think more clearly from within your own perspective.<br><br>What would you like to examine today?</div>
@@ -335,7 +416,7 @@ var state={
   prfScores:{care:0,fair:0,loyal:0,auth:0},
   prfAnswers:{},asmAnswers:{},
   chatHistory:[],currentMode:'reflect',
-  coherenceHistory:[],archive:[]
+  coherenceHistory:[],archive:[],recoveryHistory:[]
 };
 
 function loadState(){
@@ -467,8 +548,8 @@ var ASM_Q=[
   {n:'6',q:'Think about a version of yourself from a few years ago \u2014 or the earliest time you can clearly remember having a sense of who you were. What has remained most stable about you since then? And what has already shifted in ways that surprised you?'},
 ];
 
-var DOMAINS=['Physical energy','Temporal horizon','Relational coherence','Structural clarity','Identity integrity'];
-var DOMAIN_DESCS=['How physically available are you today?','Can you see further than this week?','Do you feel connected to people you care about?','Does your environment make sense to you today?','Are you being who you want to be today?'];
+var DOMAINS=['Physical energy','Temporal horizon','Relational coherence','Structural clarity','Identity integrity','Recovery access'];
+var DOMAIN_DESCS=['How physically available are you today?','Can you see further than this week?','Do you feel connected to people you care about?','Does your environment make sense to you today?','Are you being who you want to be today?','Are you getting enough time to rest and restore between demands?'];
 
 // ═══ NAVIGATION ═══
 function beginJourney(){
@@ -504,12 +585,20 @@ function setMode(m){
   var descs={
     explore:'Forward mode: tell me where you want to go, what decision you are navigating, or what future you are trying to imagine.',
     experiment:'Laboratory mode: describe what you want to experiment with. We can explore counterfactuals, what-if scenarios, or what the model predicts about who you could become.',
-    reflect:'Reflection mode: bring something real from your life right now. A difficult situation, a feeling of uncertainty, a success, a regret.'
+    reflect:'Reflection mode: bring something real from your life right now. A difficult situation, a feeling of uncertainty, a success, a regret.',
+    recover:'Recovery mode: for moments when you may not need deeper analysis yet \u2014 you may need rest, grounding, or a smaller next step first. Low coherence is not failure. It is information.'
   };
   document.getElementById('mode-desc').textContent=descs[m]||'';
-  ['explore','experiment','reflect'].forEach(function(k){
+  // Show/hide Recovery UI panel
+  var recPanel=document.getElementById('recovery-panel');
+  if(recPanel) recPanel.style.display=(m==='recover')?'block':'none';
+  ['explore','experiment','reflect','recover'].forEach(function(k){
     var btn=document.getElementById('mode-'+k);
-    if(btn){btn.className=k===m?'btn':'btn btn-out';btn.style.fontSize='.78rem';btn.style.padding='.35rem .75rem';}
+    if(btn){
+      btn.className=k===m?'btn':'btn btn-out';
+      btn.style.fontSize='.78rem';btn.style.padding='.35rem .75rem';
+      if(k==='recover'&&k!==m){btn.style.borderColor='#0D5E57';btn.style.color='#0D5E57';}
+    }
   });
 }
 function showEl(id){
@@ -641,7 +730,18 @@ async function sendMessage(){
   };
   var recentArchive=(state.archive||[]).slice(-3).map(function(e){return e.text;}).join('\n---\n');
   var asmSummary=state.asmAnswers?Object.values(state.asmAnswers).filter(Boolean).slice(0,3).join(' | '):'';
-  var sys='You are the Companion in Examined, a personal philosophy laboratory. You hold the user\'s complete model and engage with them from within it.\n\nYou understand, without using technical vocabulary, that the user is a recursively organized being whose identity is maintained through ongoing loops of perception, action, consequence, and revision. Their sense of self is not a fixed substance \u2014 it is an architecture sustained through effort, sometimes under great burden. Coherence for them does not mean consistency; it means the capacity to integrate change without losing the thread of who they are.\n\nUSER\'S MORAL FRAMEWORK:\nPrimary foundation: '+(PRF_NAMES[primary]||'Mixed')+'\nScores \u2014 Care:'+(scores.care||0)+', Fairness:'+(scores.fair||0)+', Loyalty:'+(scores.loyal||0)+', Authority:'+(scores.auth||0)+'\n\nASSEMBLY HISTORY THEMES:\n'+(asmSummary||'Not yet provided')+'\n\nRECENT ARCHIVE:\n'+(recentArchive||'Nothing archived yet')+'\n\nCURRENT MODE: '+(state.currentMode||'reflect')+'\n'+(modeInstr[state.currentMode]||'')+'\n\nIMPORTANT RULES:\n- Never use jargon: no PRF, ATCF, Identity Kernel, recursive coherence, FHRI_max\n- Translate everything into plain experiential language\n- Ask questions that open the investigation rather than close it\n- Acknowledge difficult things before analyzing them\n- Keep responses to 120\u2013200 words\n- End most responses with one question or observation\n- If the user expresses serious distress or safety concerns, direct them immediately to human support';
+  var rules=[
+    'Never use jargon: no PRF, ATCF, Identity Kernel, recursive coherence, FHRI_max',
+    'Translate everything into plain experiential language',
+    'Ask questions that open the investigation rather than close it',
+    'Acknowledge difficult things before analyzing them',
+    'Keep responses to 120-200 words',
+    'End most responses with one question or observation',
+    'If the user expresses serious distress or safety concerns, direct them immediately to human support',
+    'CRITICAL: When the user appears depleted or overwhelmed - saying they cannot think, feel exhausted, feel trapped, feel like everything is too much, or do not feel like themselves - do NOT intensify analysis. Gently name what you observe, validate that low coherence is not failure, and suggest this may be a moment for Recovery Mode rather than deeper analysis. Ask if they would like to try that. Then stop and let them choose.',
+    'Recovery Mode is the fourth Companion mode (alongside Explore, Experiment, Reflect). It focuses on burden reduction, rest, and pacing rather than interpretation.'
+  ].join('\n- ');
+  var sys='You are the Companion in Examined, a personal philosophy laboratory. You hold the user\'s complete model and engage with them from within it.\n\nYou understand, without using technical vocabulary, that the user is a recursively organized being whose identity is maintained through ongoing loops of perception, action, consequence, and revision. Their sense of self is not a fixed substance \u2014 it is an architecture sustained through effort, sometimes under great burden. Coherence for them does not mean consistency; it means the capacity to integrate change without losing the thread of who they are.\n\nUSER\'S MORAL FRAMEWORK:\nPrimary foundation: '+(PRF_NAMES[primary]||'Mixed')+'\nScores \u2014 Care:'+(scores.care||0)+', Fairness:'+(scores.fair||0)+', Loyalty:'+(scores.loyal||0)+', Authority:'+(scores.auth||0)+'\n\nASSEMBLY HISTORY THEMES:\n'+(asmSummary||'Not yet provided')+'\n\nRECENT ARCHIVE:\n'+(recentArchive||'Nothing archived yet')+'\n\nCURRENT MODE: '+(state.currentMode||'reflect')+'\n'+(modeInstr[state.currentMode]||'')+'\n\nIMPORTANT RULES:\n- '+rules;
   try{
     var text=await callClaude(sys,state.chatHistory.slice(-10),350);
     thinking.remove();
@@ -809,6 +909,336 @@ if(state.workspace && state.profile){
   buildCoherenceSliders();renderArchive();buildCoherenceChart();
 }
 // In all other cases (new user, or user without profile yet) show the landing page
+
+// ═══════════════════════════════════════════════════════════════════════
+// RECOVERY MODE — full logic
+// ═══════════════════════════════════════════════════════════════════════
+
+// --- CurrentLoad computation -----------------------------------------
+// Weighted proxy for S_eff (scar burden) — user-facing label only
+function computeCurrentLoad(scores){
+  // scores = [physEnergy, tempHorizon, relCoherence, structClarity, identIntegrity, recovAccess]
+  // weights from research: physical 0.25, temporal 0.20, structural 0.20, relational 0.15, identity 0.20
+  // recovery access: reduces load when high, adds when low
+  if(!scores||!scores.length) return null;
+  var w=[0.25,0.20,0.15,0.20,0.20];
+  var load=0;
+  for(var i=0;i<5&&i<scores.length;i++) load+=(5-scores[i])*w[i];
+  // sixth domain: recovery access reduces overall load if high, adds if low
+  if(scores.length>=6) load+=(5-scores[5])*0.10;
+  return Math.min(Math.max(load,0),5);
+}
+
+function displayCurrentLoad(load){
+  var fill=document.getElementById('load-fill');
+  var label=document.getElementById('load-label');
+  var msg=document.getElementById('load-message');
+  if(!fill||!label) return;
+  var pct=Math.round((load/5)*100);
+  fill.style.width=pct+'%';
+  fill.style.background=load>3.5?'#991B1B':load>2.5?'#92400e':load>1.5?'#1d4ed8':'#0D5E57';
+  var tier=load>3.5?'High':load>2.5?'Moderate':'Low';
+  label.textContent=tier+' load ('+(pct)+'%)';
+  label.style.color=load>3.5?'#991B1B':load>2.5?'#92400e':'#0D5E57';
+  var msgs={
+    high:'This is not the moment for deep analysis. Reducing load first will make examination more honest.',
+    moderate:'You have some capacity but not unlimited. Recovery Mode can help protect what remains.',
+    low:'Your capacity looks adequate. Examination or exploration may be productive right now.'
+  };
+  if(msg) msg.textContent=msgs[load>3.5?'high':load>2.5?'moderate':'low'];
+}
+
+// --- Burden type data ------------------------------------------------
+var BURDEN_DATA={
+  body:{
+    domain:0,
+    prompt:'Your body may be carrying more of this than your thoughts can solve right now.',
+    actions:[
+      'Drink a full glass of water before continuing.',
+      'Eat something simple if you have not eaten recently.',
+      'Stand, stretch, and take five slow breaths.',
+      'Rest without evaluating yourself — not everything needs a decision today.',
+      'Delay any major decisions until physical energy recovers.'
+    ],
+    depthMap:{
+      one_minute:'Stand, stretch, drink water. That is enough for right now.',
+      five_minute:'Drink water. Name one major decision you will delay until tomorrow. Set a timer for 10 minutes of rest with no input.',
+      conversation:'Let\'s talk about what\'s in your body right now before we touch what\'s in your mind.',
+      save_for_later:'Noted. Your body burden is logged. Return to this when you have physical capacity.'
+    }
+  },
+  time:{
+    domain:1,
+    prompt:'When the future collapses into urgency, recovery begins by making time visible again.',
+    actions:[
+      'Name one thing that can genuinely wait until tomorrow.',
+      'Reduce today\'s goal to one visible next action.',
+      'Make a "not now" list — everything that feels urgent but isn\'t.',
+      'Choose the next 10-minute action only. Not the whole plan.',
+      'Notice whether the urgency is real or inherited from anxiety.'
+    ],
+    depthMap:{
+      one_minute:'Name one thing that can wait. Write it down. That\'s the reset.',
+      five_minute:'Write three things that feel urgent. Circle the one that actually matters today. The others go on a "not now" list.',
+      conversation:'Let\'s look at what\'s collapsed your time horizon and find one place where you can restore some space.',
+      save_for_later:'Noted. Time burden logged. Return when urgency has reduced enough to see clearly.'
+    }
+  },
+  relationship:{
+    domain:2,
+    prompt:'Not every relationship problem should be solved while your repair capacity is low.',
+    actions:[
+      'Name one person who feels safe to you right now.',
+      'Name one person or situation that is currently costing you capacity.',
+      'Write the unsent sentence — what you would say if there were no consequences.',
+      'Ask yourself: does this need repair, distance, or rest?',
+      'Do not attempt reconciliation when your P (repair capacity) is low.'
+    ],
+    depthMap:{
+      one_minute:'Name one person who feels safe. Rest in that connection for a moment.',
+      five_minute:'Write the unsent sentence. Don\'t send it. Decide: repair, distance, or rest?',
+      conversation:'Tell me about the relationship burden without trying to solve it. Just name it first.',
+      save_for_later:'Noted. Relationship burden logged. Return when you have more repair capacity.'
+    }
+  },
+  structure:{
+    domain:3,
+    prompt:'Confusion often feels personal when the structure itself is unclear.',
+    actions:[
+      'Write the problem in one sentence. Just one.',
+      'Separate the facts from your interpretations of the facts.',
+      'Identify the one next visible step. Not the whole path.',
+      'Stop trying to solve the whole system today.',
+      'Ask: is this confusion mine, or is the structure itself genuinely unclear?'
+    ],
+    depthMap:{
+      one_minute:'Write the problem in one sentence. Stop there.',
+      five_minute:'Write the problem. Separate facts from interpretations. Identify one next step.',
+      conversation:'Let\'s untangle what\'s structural from what\'s personal in what you\'re facing.',
+      save_for_later:'Noted. Structure burden logged. Return when you can separate the pieces more clearly.'
+    }
+  },
+  identity:{
+    domain:4,
+    prompt:'You do not need to solve your whole identity right now. Start by protecting one thread.',
+    actions:[
+      'Recall one value that still feels stable and true.',
+      'Name one action you could take today that still feels like you.',
+      'Notice what you are being asked to adapt, perform, or suppress.',
+      'Save a note to your future self about what matters right now.',
+      // K_drift question — only shown at conversation depth (added dynamically)
+      'Protect one thread of yourself while the rest is uncertain.'
+    ],
+    depthMap:{
+      one_minute:'Name one thing that still feels true about you. Hold it.',
+      five_minute:'Name one stable value. Name one action that still feels like you. That\'s enough for now.',
+      conversation:'Let\'s look at whether what you\'re experiencing is natural change or pressure from outside. There\'s an important difference.',
+      save_for_later:'Noted. Identity burden logged. Return when you have more capacity for this kind of examination.'
+    }
+  }
+};
+
+// --- Recovery state --------------------------------------------------
+var recState={burdenType:null,depth:null,noteText:null};
+
+function resetRecovery(){
+  recState={burdenType:null,depth:null,noteText:null};
+  var s1=document.getElementById('rec-step1');
+  var s2=document.getElementById('rec-step2');
+  var s3=document.getElementById('rec-step3');
+  var no=document.getElementById('rec-note-output');
+  if(s1) s1.style.display='block';
+  if(s2) s2.style.display='none';
+  if(s3) s3.style.display='none';
+  if(no) no.style.display='none';
+  // Reset burden button highlights
+  document.querySelectorAll('.rec-burden-btn').forEach(function(b){
+    b.style.background='#fff';b.style.borderColor='rgba(60,50,30,.15)';b.style.color='inherit';
+  });
+}
+
+function selectBurden(type){
+  recState.burdenType=type;
+  // Highlight selected
+  document.querySelectorAll('.rec-burden-btn').forEach(function(b){
+    b.style.background='#fff';b.style.borderColor='rgba(60,50,30,.15)';b.style.color='inherit';
+  });
+  event.currentTarget.style.background='#E6FAF5';
+  event.currentTarget.style.borderColor='#0D5E57';
+  // Advance to step 2
+  setTimeout(function(){
+    var s2=document.getElementById('rec-step2');
+    if(s2){s2.style.display='block';s2.scrollIntoView({behavior:'smooth',block:'nearest'});}
+  },220);
+}
+
+function selectDepth(depth){
+  if(!recState.burdenType) return;
+  recState.depth=depth;
+  var data=BURDEN_DATA[recState.burdenType];
+  // Highlight selected depth
+  document.querySelectorAll('.rec-depth-btn').forEach(function(b){
+    b.style.background='#fff';b.style.borderColor='rgba(60,50,30,.15)';
+  });
+  event.currentTarget.style.background='#E6FAF5';
+  event.currentTarget.style.borderColor='#0D5E57';
+  // Show step 3
+  var s3=document.getElementById('rec-step3');
+  var prompt=document.getElementById('rec-prompt');
+  var actions=document.getElementById('rec-actions');
+  if(!s3||!prompt||!actions) return;
+  // Set prompt
+  prompt.textContent=data.prompt;
+  // Build action list — for identity/conversation add K_drift question
+  var acts=data.actions.slice();
+  if(recState.burdenType==='identity'&&depth==='conversation'){
+    acts.splice(2,0,'"What am I being asked to become — and does that feel chosen or pressured?"');
+  }
+  actions.innerHTML='';
+  acts.forEach(function(a){
+    var div=document.createElement('div');
+    div.style.cssText='display:flex;gap:.5rem;align-items:flex-start;padding:.4rem 0;border-bottom:1px solid rgba(60,50,30,.07)';
+    div.innerHTML='<span style="color:#0D5E57;flex-shrink:0;margin-top:.1rem">&#8594;</span>'
+      +'<span style="font-size:.86rem;line-height:1.6;color:#1a1612">'+a+'</span>';
+    actions.appendChild(div);
+  });
+  // Depth-specific note
+  var depthNote=document.createElement('div');
+  depthNote.style.cssText='margin-top:.75rem;padding:.6rem .8rem;background:rgba(13,94,87,.06);border-radius:.35rem;font-size:.82rem;color:#0D5E57;line-height:1.55;font-style:italic';
+  depthNote.textContent=data.depthMap[depth]||'';
+  actions.appendChild(depthNote);
+  s3.style.display='block';
+  s3.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+// --- Generate Recovery Note via Claude --------------------------------
+async function generateRecoveryNote(){
+  if(!recState.burdenType||!state.profile) return;
+  var btn=document.getElementById('rec-note-btn');
+  if(btn){btn.textContent='Generating…';btn.disabled=true;}
+  var latestCoherence=state.coherenceHistory.length
+    ?state.coherenceHistory[state.coherenceHistory.length-1]:null;
+  var coherenceStr=latestCoherence
+    ?DOMAINS.map(function(d,i){return d+': '+(latestCoherence.scores[i]||'?')+'/5';}).join(', ')
+    :'not yet recorded';
+  var burdenNames={body:'physical/body',time:'time/urgency',
+    relationship:'relational',structure:'structural/clarity',identity:'identity'};
+  var depthNames={one_minute:'one-minute reset',five_minute:'five-minute plan',
+    conversation:'reflective conversation',save_for_later:'saved for later'};
+  var noteSys='You are writing a brief, warm Recovery Note for someone using the Examined app. '
+    +'This person has identified their primary burden as '+burdenNames[recState.burdenType]+' burden. '
+    +'Their coherence readings: '+coherenceStr+'. '
+    +'Recovery depth chosen: '+depthNames[recState.depth]+'. '
+    +'Write a 3-4 sentence note that: names what you observe without judgment, '
+    +'confirms that low coherence is not failure, '
+    +'offers one specific next step calibrated to their burden and depth level, '
+    +'and ends with one sentence of genuine care. '
+    +'Do not use technical language. Do not be clinical. Be genuinely warm. '
+    +'Speak directly to them in second person. Keep it under 100 words.';
+  try{
+    var note=await callClaude(noteSys,'Generate a Recovery Note for this person right now.',state.chatHistory.slice(-4));
+    recState.noteText=note;
+    var out=document.getElementById('rec-note-output');
+    var txt=document.getElementById('rec-note-text');
+    if(out&&txt){txt.textContent=note;out.style.display='block';out.scrollIntoView({behavior:'smooth',block:'nearest'});}
+  }catch(e){
+    var txt=document.getElementById('rec-note-text');
+    if(txt) txt.textContent='Recovery note generation unavailable. Try again shortly.';
+  }
+  if(btn){btn.textContent='Generate Recovery Note';btn.disabled=false;}
+}
+
+function archiveRecoveryNote(){
+  if(!recState.noteText) return;
+  var latestCoherence=state.coherenceHistory.length
+    ?state.coherenceHistory[state.coherenceHistory.length-1]:null;
+  var entry={
+    date:new Date().toISOString(),
+    burdenType:recState.burdenType,
+    recoveryDepth:recState.depth,
+    coherenceBefore:latestCoherence?latestCoherence.scores:[],
+    suggestedAction:BURDEN_DATA[recState.burdenType]?BURDEN_DATA[recState.burdenType].depthMap[recState.depth]:'',
+    noteText:recState.noteText,
+    archived:true
+  };
+  state.recoveryHistory.push(entry);
+  // Also add to main archive as a timestamped entry
+  state.archive.push({
+    date:entry.date,
+    mode:'recover',
+    exchange:'[Recovery Note — '+{body:'Body',time:'Time',relationship:'Relationship',structure:'Structure',identity:'Identity'}[recState.burdenType]+' burden] '+recState.noteText,
+    archived:true
+  });
+  saveState();
+  var btn=document.querySelector('#rec-note-output button');
+  if(btn){btn.textContent='Saved ✓';btn.disabled=true;}
+  refreshArchive();
+}
+
+// --- Trigger from coherence check-in ---------------------------------
+function suggestRecoveryMode(){
+  var notice=document.createElement('div');
+  notice.style.cssText='margin-top:.75rem;padding:.75rem 1rem;background:linear-gradient(135deg,#E6FAF5,#f8f6f1);border:1.5px solid #0D5E57;border-radius:.45rem;font-size:.86rem;line-height:1.6;color:#1a1612';
+  var tag=document.createElement('span');
+  tag.style.cssText='font-family:monospace;font-size:.6rem;color:#0D5E57;text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:.3rem';
+  tag.textContent='Recovery Mode suggested';
+  notice.appendChild(tag);
+  var msg=document.createTextNode('Your check-in suggests that deeper analysis may cost more than it gives right now. Low coherence is not failure \u2014 it is information about what you need. ');
+  notice.appendChild(msg);
+  var btn=document.createElement('a');
+  btn.href='#';btn.style.color='#0D5E57';btn.style.fontWeight='500';
+  btn.textContent='Enter Recovery Mode';
+  btn.onclick=function(e){e.preventDefault();setMode('recover');};
+  notice.appendChild(btn);
+  notice.appendChild(document.createTextNode(' to reduce load before returning to examination.'));
+  var saveBtn=document.querySelector('[onclick="saveCoherence()"]');
+  if(saveBtn&&saveBtn.parentNode) saveBtn.parentNode.insertBefore(notice,saveBtn.nextSibling);
+}
+
+// Patch into saveCoherence — add trigger check
+var _origSaveCoherence=window.saveCoherence;
+if(typeof saveCoherence==='function'){
+  var _sc=saveCoherence;
+  window.saveCoherence=function(){
+    _sc();
+    // Check trigger conditions
+    var latest=state.coherenceHistory.length?state.coherenceHistory[state.coherenceHistory.length-1]:null;
+    if(!latest) return;
+    var scores=latest.scores;
+    if(!scores||!scores.length) return;
+    var avg=scores.reduce(function(a,b){return a+b;},0)/scores.length;
+    var phys=scores[0]||5,temp=scores[1]||5,struct=scores[3]||5,ident=scores[4]||5;
+    if(avg<2.5||phys<=2||ident<=2||struct<=2){
+      suggestRecoveryMode();
+    }
+    // Update CurrentLoad display if in recover mode
+    if(state.currentMode==='recover'){
+      var load=computeCurrentLoad(scores);
+      displayCurrentLoad(load);
+    }
+  };
+}
+
+// Show CurrentLoad when entering recover mode
+var _origSetMode=window.setMode;
+window.setMode=function(m){
+  _origSetMode(m);
+  if(m==='recover'){
+    // Compute load from latest coherence if available
+    var latest=state.coherenceHistory.length?state.coherenceHistory[state.coherenceHistory.length-1]:null;
+    if(latest&&latest.scores){
+      var load=computeCurrentLoad(latest.scores);
+      displayCurrentLoad(load);
+    } else {
+      var loadLabel=document.getElementById('load-label');
+      var loadMsg=document.getElementById('load-message');
+      if(loadLabel) loadLabel.textContent='No check-in yet';
+      if(loadMsg) loadMsg.textContent='Complete a coherence check-in to see your current load.';
+    }
+    resetRecovery();
+  }
+};
+
 </script>
 </body>
 </html>

@@ -185,6 +185,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
       <div class="phase-lbl">Begin here</div>
       <h2 class="phase-title">Your philosophical profile</h2>
       <p class="phase-desc">Two steps, fifteen minutes. First, twenty-two scenario questions that map your moral architecture. Then, six questions about your life and how you became who you are. Together they generate a personal philosophical profile that describes not just your values but your specific way of inhabiting them.</p>
+      <p class="phase-desc" style="margin-top:.6rem;font-style:italic;color:rgba(26,22,18,.65);font-size:.93rem;line-height:1.75">The Examined app holds that you are a moral agent — a being with values, history, and commitments that are genuinely yours. It holds equally that everyone you encounter is the same kind of being. Self-examination and the recognition of others as self-examining beings are not separate tasks. They are the same project, approached from the inside.</p>
       <div class="panel teal">Your profile is stored only in this browser. Nothing leaves your device without your explicit action.</div>
       <div id="no-key-notice" style="display:none;background:#fef3c7;border:1px solid #92400e;border-left:4px solid #92400e;border-radius:.4rem;padding:.9rem 1.1rem;margin:.75rem 0;font-size:.88rem;color:#1a1612;line-height:1.7">
         <strong>Connection issue.</strong><br>
@@ -375,6 +376,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
     <h2 class="phase-title">How are you today?</h2>
     <p class="phase-desc">Five domains, one slider each. Thirty seconds. The trajectory over time is more informative than any single reading.</p>
     <div class="coherence-domains" id="coherence-sliders"></div>
+    <div id="relational-question" style="display:none;margin-top:1.1rem;background:linear-gradient(135deg,#f8f6f1,#eeeae1);border:1px solid rgba(13,94,87,.2);border-radius:.45rem;padding:.9rem 1rem"><div style="font-family:'DM Mono',monospace;font-size:.6rem;color:#0D5E57;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.45rem">A question to hold</div><p style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-style:italic;color:#1a1612;margin:0 0 .65rem;line-height:1.65">Is there anyone whose capacity to act from their values is being shaped — supported or limited — by your situation, decisions, or context right now?</p><p style="font-size:.8rem;color:rgba(26,22,18,.5);margin:0 0 .6rem;font-style:italic">You don’t need to solve this. Just notice it.</p><textarea id="relational-response" placeholder="A few words, or nothing at all…" style="width:100%;min-height:70px;padding:.6rem .75rem;font-family:'DM Sans',sans-serif;font-size:.88rem;border:1px solid rgba(60,50,30,.18);border-radius:.35rem;background:#fff;resize:vertical;color:#1a1612;box-sizing:border-box"></textarea></div>
     <button class="btn" onclick="saveCoherence()" style="margin-top:.75rem">Save today&rsquo;s reading</button>
     <div style="margin-top:1.5rem">
       <div style="font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem">Your coherence trajectory</div>
@@ -425,6 +427,14 @@ function loadState(){
 }
 function saveState(){localStorage.setItem('examined_v2',JSON.stringify(state));}
 loadState();
+// Init relational question — show on first check-in, every 3rd thereafter
+(function(){
+  var rq=document.getElementById('relational-question');
+  if(rq){
+    var n=(state.coherenceHistory||[]).length;
+    rq.style.display=(n%3===0)?'block':'none';
+  }
+})();
 
 // ═══ API ═══
 // API key managed server-side via proxy
@@ -668,7 +678,7 @@ async function generateProfile(){
   showEl('profile-loading');
   var scores=state.prfScores;
   var primary=Object.keys(scores).sort(function(a,b){return(scores[b]||0)-(scores[a]||0);})[0];
-  var sys='You are generating a personal philosophical profile for a person who has completed a moral framework assessment and answered six assembly history questions. Your task is to write a profile that feels like genuine recognition \u2014 like the person is reading a description of themselves that is more precise and personal than they usually receive.\n\nPRF (moral framework) scores: Care='+scores.care+', Fairness='+scores.fair+', Loyalty='+scores.loyal+', Authority='+scores.auth+'\nPrimary moral foundation: '+PRF_NAMES[primary]+'\n\nWrite exactly 5 paragraphs (600\u2013800 words total) that:\n1. Describe specifically how this person tends to perceive moral situations \u2014 what they notice first, what registers as urgent before anything else does\n2. Describe their characteristic strengths as a moral agent given this specific framework\n3. Name the specific blind spots or tensions their framework creates \u2014 what they tend to miss, misread, or find genuinely difficult\n4. Weave in themes from their assembly history responses without quoting them directly \u2014 notice patterns, connections, and tensions across the six answers that the person may not have noticed themselves\n5. End with a question this person has probably been living with for years without quite being able to articulate it\n\nStyle: Use second person throughout (you, your). Be personal and precise, not clinical or generic. Write as if you know this specific person through their answers. The goal is recognition, not analysis.';
+  var sys='You are generating a personal philosophical profile for a person who has completed a moral framework assessment and answered six assembly history questions. Your task is to write a profile that feels like genuine recognition \u2014 like the person is reading a description of themselves that is more precise and personal than they usually receive.\n\nPRF (moral framework) scores: Care='+scores.care+', Fairness='+scores.fair+', Loyalty='+scores.loyal+', Authority='+scores.auth+'\nPrimary moral foundation: '+PRF_NAMES[primary]+'\n\nWrite exactly 5 paragraphs (600\u2013800 words total) that:\n1. Describe specifically how this person tends to perceive moral situations \u2014 what they notice first, what registers as urgent before anything else does\n2. Describe their characteristic strengths as a moral agent given this specific framework\n3. Name the specific blind spots or tensions their framework creates \u2014 what they tend to miss, misread, or find genuinely difficult\n4. Weave in themes from their assembly history responses without quoting them directly \u2014 notice patterns, connections, and tensions across the six answers that the person may not have noticed themselves\n5. End with a question this person has probably been living with for years without quite being able to articulate it\n\n6. Add a final short paragraph (80\u201310 words) titled implicitly by its content (no heading) that names the specific philosophical extension question this framework opens. Do not moralize. Do not correct. Describe what the examined life, for someone with this specific moral architecture, makes it necessary to eventually examine: how their values apply \u2014 or are complicated \u2014 when they encounter people whose frameworks and circumstances differ substantially from their own. For a Care-dominant person this is typically the question of whose suffering registers and whose does not. For a Fairness-dominant person it is the question of whether the rules they apply equally are themselves fair to those who did not make them. For a Loyalty-dominant person it is the question of what obligations remain to those outside the primary circle. For an Authority-dominant person it is the question of whether the structures they respect protect or exclude those with less access to them. Name this question as genuinely theirs, not as a critique from outside. It is the next territory the examined life opens.\n\nStyle: Use second person throughout (you, your). Be personal and precise, not clinical or generic. Write as if you know this specific person through their answers. The goal is recognition, not analysis.';
   var userContent='Assembly history responses:\n\n'+ASM_Q.map(function(q){return 'Q: '+q.q+'\nA: '+(asm[q.n]||'(not answered)');}).join('\n\n');
   try{
     var text=await callClaude(sys,[{role:'user',content:userContent}],1400);
@@ -796,14 +806,34 @@ function saveCoherence(){
   var scores=DOMAINS.map(function(d,i){return parseInt(document.getElementById('coh-'+i).value||3);});
   var avg=scores.reduce(function(a,b){return a+b;},0)/scores.length;
   if(!state.coherenceHistory)state.coherenceHistory=[];
+  // Capture relational response if the question was shown
+  var relEl=document.getElementById('relational-response');
+  var relNote=relEl&&relEl.style.display!=='none'?(relEl.value||''):'';
+  // Clear relational text for next time
+  if(relEl) relEl.value='';
   state.coherenceHistory.push({
     date:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'}),
-    scores:scores,avg:avg
+    scores:scores,avg:avg,
+    relationalNote:relNote
   });
   if(state.coherenceHistory.length>12)state.coherenceHistory=state.coherenceHistory.slice(-12);
   saveState();buildCoherenceChart();
+  // Determine whether to show relational question on next check-in
+  // Show every 3rd reading (count 0-indexed: 0, 3, 6, 9...)
+  var rqPanel=document.getElementById('relational-question');
+  if(rqPanel){
+    var nextCount=state.coherenceHistory.length;
+    rqPanel.style.display=(nextCount%3===0)?'block':'none';
+  }
+  // Recovery trigger check (existing logic preserved)
+  var phys=scores[0]||5,temp=scores[1]||5,struct=scores[3]||5,ident=scores[4]||5;
+  if(avg<2.5||phys<=2||ident<=2||struct<=2) suggestRecoveryMode();
+  if(state.currentMode==='recover'){
+    var load=computeCurrentLoad(scores);
+    displayCurrentLoad(load);
+  }
   var btn=document.querySelector('button[onclick="saveCoherence()"]');
-  if(btn){btn.textContent='Saved \u2713';setTimeout(function(){btn.textContent='Save today\u2019s reading';},1800);}
+  if(btn){btn.textContent='Saved ✓';setTimeout(function(){btn.textContent='Save today’s reading';},1800);}
 }
 function buildCoherenceChart(){
   var c=document.getElementById('coh-chart');if(!c)return;
@@ -1195,29 +1225,7 @@ function suggestRecoveryMode(){
   if(saveBtn&&saveBtn.parentNode) saveBtn.parentNode.insertBefore(notice,saveBtn.nextSibling);
 }
 
-// Patch into saveCoherence — add trigger check
-var _origSaveCoherence=window.saveCoherence;
-if(typeof saveCoherence==='function'){
-  var _sc=saveCoherence;
-  window.saveCoherence=function(){
-    _sc();
-    // Check trigger conditions
-    var latest=state.coherenceHistory.length?state.coherenceHistory[state.coherenceHistory.length-1]:null;
-    if(!latest) return;
-    var scores=latest.scores;
-    if(!scores||!scores.length) return;
-    var avg=scores.reduce(function(a,b){return a+b;},0)/scores.length;
-    var phys=scores[0]||5,temp=scores[1]||5,struct=scores[3]||5,ident=scores[4]||5;
-    if(avg<2.5||phys<=2||ident<=2||struct<=2){
-      suggestRecoveryMode();
-    }
-    // Update CurrentLoad display if in recover mode
-    if(state.currentMode==='recover'){
-      var load=computeCurrentLoad(scores);
-      displayCurrentLoad(load);
-    }
-  };
-}
+// Recovery trigger now integrated directly into saveCoherence()
 
 // Show CurrentLoad when entering recover mode
 var _origSetMode=window.setMode;

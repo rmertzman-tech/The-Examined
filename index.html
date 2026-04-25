@@ -253,6 +253,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
               <div>
                 <div style="font-weight:500;font-size:.9rem;margin-bottom:.2rem">Read your profile slowly</div>
                 <div style="font-size:.83rem;color:rgba(26,22,18,.65);line-height:1.6">Notice what feels precisely right, and what feels slightly off or missing. Both are useful. The profile is a first approximation, not a final word. The parts that miss you are where your examination has the most territory to explore.</div>
+                <button class="btn btn-out btn-sm" onclick="resetProfile()" style="margin-top:.55rem;font-size:.8rem;padding:.38rem .9rem;border-color:#0D5E57;color:#0D5E57">&#9998; Add to or revise your answers</button>
               </div>
             </div>
           </div>
@@ -338,7 +339,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
         <button class="btn btn-out" onclick="exportProfile()">&#11015; Export profile</button>
       </div>
       <div style="margin-top:1rem">
-        <button class="btn btn-out" onclick="resetProfile()" style="font-size:.8rem">Regenerate profile</button>
+        <button class="btn btn-out" onclick="resetProfile()" style="font-size:.8rem;border-color:#0D5E57;color:#0D5E57">&#9998; Deepen or regenerate profile</button>
       </div>
     </div>
 
@@ -756,11 +757,23 @@ function buildAssembly(){
   var c=document.getElementById('assembly-questions');c.innerHTML='';
   ASM_Q.forEach(function(q){
     var d=document.createElement('div');d.className='asm-q';
+    var saved=state.asmAnswers&&state.asmAnswers[q.n]?state.asmAnswers[q.n]:'';
     d.innerHTML='<div class="asm-num">Question '+q.n+'</div>'+
       '<div class="asm-lbl">'+q.q+'</div>'+
       '<textarea id="asm-'+q.n+'" placeholder="Take your time. Be specific." oninput="checkAsm()"></textarea>';
     c.appendChild(d);
+    // Restore saved answer if present
+    var ta=d.querySelector('textarea');
+    if(ta&&saved){ta.value=saved;}
+    // Add depth hint below textarea
+    var hint=document.createElement('div');
+    hint.style.cssText='font-size:.75rem;color:rgba(26,22,18,.45);margin-top:.2rem;font-style:italic';
+    hint.id='hint-'+q.n;
+    updateHint(hint,ta?ta.value:'');
+    d.appendChild(hint);
+    if(ta){ta.addEventListener('input',function(){updateHint(hint,ta.value);});}
   });
+  checkAsm(); // recheck button state after restoring
 }
 function checkAsm(){
   var filled=ASM_Q.filter(function(q){
@@ -817,9 +830,44 @@ function showProfileResult(){
   updateGuideBtn();
 }
 function resetProfile(){
-  if(!confirm('This will clear your current profile and restart the assessment. Your archive and coherence history will be preserved. Continue?'))return;
-  state.profile=null;state.prfAnswers={};state.asmAnswers={};state.prfScores={care:0,fair:0,loyal:0,auth:0};
-  saveState();showEl('profile-start');
+  // Two-path reset: refine answers (keep PRF) or full restart
+  if(!state.asmAnswers||Object.keys(state.asmAnswers).length===0){
+    // No saved answers — must do full reset
+    if(!confirm('This will restart the full assessment. Continue?'))return;
+    state.profile=null;state.prfAnswers={};state.asmAnswers={};
+    state.prfScores={care:0,fair:0,loyal:0,auth:0};
+    saveState();buildAsmQuestions();showEl('profile-start');
+    return;
+  }
+  // Has saved answers — offer choice
+  var choice=confirm(
+    'Deepen your profile or start fresh?\n\n'+'OK → Return to your assembly history to add or revise your answers, then regenerate. '+'Your moral framework scores are preserved.\n\n'+'Cancel → Full restart — clears everything including the 22 scenario questions.'
+  );
+  if(choice){
+    // Enrich path: keep PRF scores, go back to assembly history pre-populated
+    state.profile=null;
+    saveState();
+    buildAsmQuestions();
+    // Update heading tone if this is a return visit
+    var hasAnswers=state.asmAnswers&&Object.keys(state.asmAnswers).some(function(k){return(state.asmAnswers[k]||'').length>10;});
+    var hTitle=document.querySelector('#profile-assembly .phase-title');
+    var hDesc=document.querySelector('#profile-assembly .phase-desc');
+    var hLabel=document.querySelector('#profile-assembly .phase-lbl');
+    if(hasAnswers&&hTitle)hTitle.textContent='Deepen your answers';
+    if(hasAnswers&&hDesc)hDesc.textContent='Your previous answers are shown below. Add, extend, or revise any of them. The more specific and detailed each response, the more precise the profile will be. Then regenerate.';
+    if(hasAnswers&&hLabel)hLabel.textContent='Return visit — enriching your model';
+    showEl('profile-assembly');
+    updateGuideBtn();
+    // Scroll to top of assembly section
+    var el=document.getElementById('profile-assembly');
+    if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+  } else {
+    // Full restart path
+    if(!confirm('Full restart will clear your PRF22 answers and all assembly history. '+'Your Companion archive and coherence history are preserved. Are you sure?'))return;
+    state.profile=null;state.prfAnswers={};state.asmAnswers={};
+    state.prfScores={care:0,fair:0,loyal:0,auth:0};
+    saveState();showEl('profile-start');
+  }
 }
 
 // ═══ COMPANION ═══
@@ -1410,6 +1458,18 @@ var MODE_TIPS={
       setTimeout(function(){tip.style.opacity='0';},2200);},{passive:true});
   });
 })();
+
+
+function updateHint(hintEl, text){
+  var wc=text.trim().split(/\s+/).filter(Boolean).length;
+  if(wc===0){hintEl.textContent='';return;}
+  var msg='';
+  if(wc<30)  msg=wc+' words — a few more specific details will make the profile more precise.';
+  else if(wc<80)  msg=wc+' words — good start. Concrete examples and specific memories produce stronger profiles.';
+  else if(wc<150) msg=wc+' words — solid. You can go deeper if something comes to mind.';
+  else            msg=wc+' words — strong response. This level of depth generates the most precise profiles.';
+  hintEl.textContent=msg;
+}
 
 </script>
 </body>

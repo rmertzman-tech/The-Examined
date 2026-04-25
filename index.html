@@ -180,7 +180,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
   <br>
   <button class="btn" onclick="beginJourney()" style="font-size:1rem;padding:.8rem 2.2rem;margin-top:.75rem">Begin the examination &rarr;</button>
   <div style="margin-top:1.2rem;display:flex;gap:.75rem;flex-wrap:wrap;justify-content:center">
-    <button class="btn btn-out" onclick="showImport()" style="font-size:.83rem">Restore a previous twin</button>
+    <button class="btn btn-out" id="restore-btn" onclick="checkBrowserRestore()" style="font-size:.83rem">&#128274; Continue my previous session</button>
     <button class="btn btn-out" onclick="hardReset()" style="font-size:.83rem;color:var(--muted);border-color:var(--border)">Clear and restart</button>
   </div>
   <div id="import-area" style="display:none;margin-top:.75rem">
@@ -542,7 +542,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
     <div style="display:flex;gap:.5rem;margin-top:1rem;flex-wrap:wrap">
       <button class="btn btn-out" onclick="exportArchive()">&#11015; Export archive</button>
       <button class="btn btn-out" onclick="exportTwin()">&#128190; Backup full twin</button>
-      <button class="btn btn-out" onclick="importTwin()">&#128193; Restore twin</button>
+      <div style="font-size:.78rem;color:rgba(26,22,18,.5);margin-bottom:.4rem;line-height:1.55">Your current session is already loaded from this browser automatically. Use <strong>Restore twin from file</strong> only to load data you previously exported as a JSON file &#8212; for example, to move your data to a different browser or device.</div>
+      <button class="btn btn-out" onclick="importTwin()">&#128193; Restore twin from file</button>
       <button class="btn btn-out" onclick="generateLetter()">&#9997; Letter to future self</button>
     </div>
   </div>
@@ -611,6 +612,15 @@ function loadState(){
 }
 function saveState(){localStorage.setItem('examined_v2',JSON.stringify(state));}
 loadState();
+// Auto-restore returning users — skip landing if they have a saved session
+(function(){
+  if(state.workspace){
+    document.getElementById('landing').style.display='none';
+    document.getElementById('workspace').style.display='block';
+    if(state.profile){showProfileResult();}else{showEl('profile-start');}
+    buildCoherenceSliders();renderArchive();buildCoherenceChart();
+  }
+})();
 checkDisclosure(); // Show first-entry disclosure if not yet seen
 // Init relational question — show on first check-in, every 3rd thereafter
 (function(){
@@ -1621,6 +1631,134 @@ window.setMode=function(m){
     if(ta) ta.focus();
   }
 };
+
+
+// ── SESSION RESTORE ───────────────────────────────────────────────────
+function checkBrowserRestore(){
+  // First check if there is saved data in this browser
+  var saved=localStorage.getItem('examined_v2');
+  if(saved){
+    try{
+      var parsed=JSON.parse(saved);
+      var hasProfile=!!parsed.profile;
+      var hasArchive=parsed.archive&&parsed.archive.length>0;
+      var hasCoherence=parsed.coherenceHistory&&parsed.coherenceHistory.length>0;
+      var hasPRF=parsed.prfScores&&(parsed.prfScores.care||parsed.prfScores.auth);
+      if(hasProfile||hasArchive||hasCoherence||hasPRF){
+        // Data found — restore it
+        state=Object.assign(state,parsed);
+        document.getElementById('landing').style.display='none';
+        document.getElementById('workspace').style.display='block';
+        state.workspace=true;
+        saveState();
+        if(state.profile){showProfileResult();}else{showEl('profile-start');}
+        buildCoherenceSliders();renderArchive();buildCoherenceChart();
+        // Show what was restored
+        var items=[];
+        if(hasProfile) items.push('your profile');
+        if(hasArchive) items.push(parsed.archive.length+' archive entries');
+        if(hasCoherence) items.push(parsed.coherenceHistory.length+' coherence readings');
+        showRestoreBanner('Previous session restored: '+items.join(', ')+'.');
+        return;
+      }
+    }catch(e){}
+  }
+  // No browser data — check for older key names (backward compatibility)
+  var oldKeys=['examined_v1','examined','examined_state'];
+  for(var i=0;i<oldKeys.length;i++){
+    var oldData=localStorage.getItem(oldKeys[i]);
+    if(oldData){
+      try{
+        var oldParsed=JSON.parse(oldData);
+        if(oldParsed.profile||oldParsed.archive){
+          state=Object.assign(state,oldParsed);
+          saveState(); // migrate to new key
+          localStorage.removeItem(oldKeys[i]); // clean up old key
+          document.getElementById('landing').style.display='none';
+          document.getElementById('workspace').style.display='block';
+          state.workspace=true;
+          saveState();
+          if(state.profile){showProfileResult();}else{showEl('profile-start');}
+          buildCoherenceSliders();renderArchive();buildCoherenceChart();
+          showRestoreBanner('Previous session found and migrated from an older version.');
+          return;
+        }
+      }catch(e){}
+    }
+  }
+  // No browser data at all — prompt for file import
+  showImportChoice();
+}
+
+function showRestoreBanner(msg){
+  var banner=document.createElement('div');
+  banner.style.cssText='position:fixed;top:0;left:0;right:0;background:#0D5E57;color:#fff;'
+    +'padding:.6rem 1rem;font-size:.85rem;text-align:center;z-index:200;font-family:sans-serif;'
+    +'display:flex;align-items:center;justify-content:center;gap:1rem';
+  banner.textContent=msg;
+  var close=document.createElement('button');
+  close.textContent='×';
+  close.style.cssText='background:transparent;border:none;color:#fff;font-size:1.1rem;cursor:pointer;padding:0 .3rem';
+  close.onclick=function(){banner.remove();};
+  banner.appendChild(close);
+  document.body.appendChild(banner);
+  setTimeout(function(){if(banner.parentNode)banner.remove();},5000);
+}
+
+function showImportChoice(){
+  var overlay=document.createElement('div');
+  overlay.className='modal-overlay';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem';
+  var box=document.createElement('div');
+  box.style.cssText='background:#fff;border-radius:.5rem;max-width:480px;width:100%;padding:1.5rem 1.75rem;box-shadow:0 8px 40px rgba(0,0,0,.2)';
+  var h=document.createElement('h3');
+  h.style.cssText='font-family:serif;font-size:1.3rem;font-weight:400;margin:0 0 .75rem;color:#1a1612';
+  h.textContent='No saved session found in this browser';
+  var p1=document.createElement('p');
+  p1.style.cssText='font-size:.86rem;line-height:1.7;color:#374151;margin:0 0 .75rem';
+  p1.textContent='Your Examined data is stored in the browser where you originally used the app. If you are opening a downloaded copy of the app or a different browser, your previous data will not be here automatically.';
+  var p2=document.createElement('p');
+  p2.style.cssText='font-size:.86rem;line-height:1.7;color:#374151;margin:0 0 1rem';
+  p2.innerHTML='<strong>If you exported your Twin</strong> (using the Export Twin button), you can restore from that file below. <strong>If you have not exported</strong>, your data exists in the original browser where you first used the app.';
+  var btns=document.createElement('div');
+  btns.style.cssText='display:flex;gap:.65rem;flex-wrap:wrap';
+  var importBtn=document.createElement('button');
+  importBtn.style.cssText='background:#0D5E57;color:#fff;border:none;border-radius:.35rem;padding:.55rem 1.1rem;font-size:.87rem;cursor:pointer;font-family:sans-serif';
+  importBtn.textContent='Restore from exported file';
+  importBtn.onclick=function(){overlay.remove();importTwin();};
+  var cancelBtn=document.createElement('button');
+  cancelBtn.style.cssText='background:transparent;border:1px solid rgba(60,50,30,.2);border-radius:.35rem;padding:.55rem 1.1rem;font-size:.87rem;cursor:pointer;color:#374151;font-family:sans-serif';
+  cancelBtn.textContent='Cancel';
+  cancelBtn.onclick=function(){overlay.remove();};
+  btns.appendChild(importBtn);btns.appendChild(cancelBtn);
+  box.appendChild(h);box.appendChild(p1);box.appendChild(p2);box.appendChild(btns);
+  overlay.appendChild(box);
+  overlay.addEventListener('click',function(e){if(e.target===overlay)overlay.remove();});
+  document.body.appendChild(overlay);
+}
+
+
+// Update landing restore button based on saved data
+(function(){
+  var saved=localStorage.getItem('examined_v2');
+  var btn=document.getElementById('restore-btn');
+  if(!btn) return;
+  if(saved){
+    try{
+      var parsed=JSON.parse(saved);
+      var items=[];
+      if(parsed.profile) items.push('profile');
+      if(parsed.archive&&parsed.archive.length) items.push(parsed.archive.length+' archive entries');
+      if(parsed.coherenceHistory&&parsed.coherenceHistory.length) items.push(parsed.coherenceHistory.length+' coherence readings');
+      if(items.length){
+        btn.textContent='Continue where you left off — '+items.join(', ')+' saved in this browser';
+        btn.style.borderColor='#0D5E57';btn.style.color='#0D5E57';btn.style.fontWeight='500';btn.style.fontSize='.81rem';
+      }
+    }catch(e){}
+  } else {
+    btn.textContent='Restore from an exported file';
+  }
+})();
 
 </script>
 </body>

@@ -149,6 +149,27 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 </head>
 <body>
 
+  <!-- FIRST-ENTRY DISCLOSURE MODAL -->
+  <div id="disclosure-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;display:none;align-items:center;justify-content:center;padding:1rem">
+    <div style="background:#fff;border-radius:.6rem;max-width:560px;width:100%;max-height:90vh;overflow-y:auto;padding:1.75rem 2rem;box-shadow:0 8px 40px rgba(0,0,0,.25)">
+      <div style="font-family:monospace;font-size:.6rem;color:#0D5E57;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem">Before you begin</div>
+      <h2 style="font-family:serif;font-size:1.6rem;font-weight:400;color:#1a1612;margin:0 0 1rem;line-height:1.3">A note on privacy and purpose</h2>
+      <div style="font-size:.88rem;line-height:1.8;color:#374151">
+        <p style="margin:0 0 .75rem"><strong>What this tool is:</strong> Examined is a philosophical reflection tool supporting self-knowledge and values clarification. It is not a mental health service, not a substitute for therapy or counseling, and not designed for clinical use.</p>
+        <p style="margin:0 0 .75rem"><strong>Your data stays in your browser:</strong> Your essays, profile, coherence readings, and conversation archive are stored only in this browser. Philosophy Lab Corporation has no database and cannot see what you write.</p>
+        <p style="margin:0 0 .75rem"><strong>When you use the Companion, messages are transmitted:</strong> Each message travels via an encrypted connection (HTTPS/TLS — the same standard used for online banking) to Anthropic’s Claude API. Anthropic processes your message and a summary of your profile to generate a response. The connection is encrypted in transit — it cannot be read by anyone in between. Anthropic does not train its models on API data.</p>
+        <p style="margin:0 0 .75rem"><strong>Write only what you are comfortable transmitting to a third-party AI service.</strong> If you prefer not to transmit, use Local Reflection mode in the Companion tab.</p>
+        <p style="margin:0 0 .75rem"><strong>If you are in crisis:</strong> If you are experiencing thoughts of harming yourself or others, please contact a mental health professional or call or text <strong>988</strong> (Suicide &amp; Crisis Lifeline) rather than continuing with this app right now.</p>
+        <p style="margin:0"><strong>This tool is designed for adults.</strong> If you are under 18, please seek a parent or guardian’s guidance before using it.</p>
+      </div>
+      <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin-top:1.25rem;padding-top:1rem;border-top:1px solid rgba(60,50,30,.1)">
+        <button onclick="acknowledgeDisclosure()" style="background:#0D5E57;color:#fff;border:none;border-radius:.4rem;padding:.6rem 1.5rem;font-size:.92rem;cursor:pointer;font-family:sans-serif">I understand — begin →</button>
+        <div style="font-size:.78rem;color:rgba(26,22,18,.45);font-style:italic">You can review this in the About tab at any time.</div>
+      </div>
+    </div>
+  </div>
+
+
 <!-- LANDING PAGE -->
 <div class="landing" id="landing">
   <div class="landing-mark">Examined</div>
@@ -177,6 +198,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
     <button class="ntb" onclick="swTab('companion')">Companion</button>
     <button class="ntb" onclick="swTab('coherence')">Coherence</button>
     <button class="ntb" onclick="swTab('archive')">Archive</button>
+    <button class="ntb" onclick="swTab('about')" style="font-size:.78rem;color:rgba(26,22,18,.5)">About</button>
   </div>
 
   <!-- PROFILE TAB -->
@@ -188,7 +210,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
       <h2 class="phase-title">Your philosophical profile</h2>
       <p class="phase-desc">Two steps, fifteen minutes. First, twenty-two scenario questions that map your moral architecture. Then, six questions about your life and how you became who you are. Together they generate a personal philosophical profile that describes not just your values but your specific way of inhabiting them.</p>
       <p class="phase-desc" style="margin-top:.6rem;font-style:italic;color:rgba(26,22,18,.65);font-size:.93rem;line-height:1.75">The Examined app holds that you are a moral agent — a being with values, history, and commitments that are genuinely yours. It holds equally that everyone you encounter is the same kind of being. Self-examination and the recognition of others as self-examining beings are not separate tasks. They are the same project, approached from the inside.</p>
-      <div class="panel teal">Your profile is stored only in this browser. Nothing leaves your device without your explicit action.</div>
+      <div class="panel teal" style="line-height:1.7">
+        <strong>What stays on your device:</strong> Your profile, essays, coherence readings, and archive are stored only in this browser. Philosophy Lab Corporation has no database and cannot access what you write.<br><br>
+        <strong>What is transmitted when you use the Companion:</strong> When you send a message, it travels encrypted (HTTPS/TLS) to a secure proxy, then to Anthropic’s Claude API to generate a response. Anthropic processes your message and a summary of your profile context. This is how the Companion works. The transmission is encrypted in transit — it cannot be read by anyone in between.<br><br>
+        <strong>What Anthropic does with it:</strong> Anthropic processes your messages to generate responses and does not use API data to train its models. Your data is subject to Anthropic’s privacy policy. Do not write anything you would not be comfortable transmitting to a third-party AI service.<br><br>
+        <strong>This tool is not a mental health service.</strong> If you are experiencing a mental health crisis, please contact a professional or call or text <strong>988</strong> (Suicide &amp; Crisis Lifeline).
+      </div>
       <div id="no-key-notice" style="display:none;background:#fef3c7;border:1px solid #92400e;border-left:4px solid #92400e;border-radius:.4rem;padding:.9rem 1.1rem;margin:.75rem 0;font-size:.88rem;color:#1a1612;line-height:1.7">
         <strong>Connection issue.</strong><br>
         Cannot reach the course server. Please check your internet connection, wait 30 seconds (the server may be waking up), and try the "Test API connection" button.
@@ -336,7 +363,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
       </div><!-- /next-steps-panel -->
       <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.75rem">
         <button class="btn" onclick="swTab('companion')">Open the Companion &rarr;</button>
-        <button class="btn btn-out" onclick="exportProfile()">&#11015; Export profile</button>
+        <button class="btn btn-out" onclick="exportProfile()" title="Exports your profile as a text file to your device. Nothing is sent to any server during export.">&#11015; Export profile</button>
       </div>
       <div style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
         <button class="btn btn-out" onclick="enrichProfile()" style="font-size:.82rem;padding:.45rem 1rem;border-color:#0D5E57;color:#0D5E57">&#9998; Add to my answers &amp; regenerate</button>
@@ -376,11 +403,14 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
       <button class="btn btn-out" id="mode-experiment" onclick="setMode('experiment')" style="font-size:.78rem;padding:.35rem .75rem">Experiment</button>
       <button class="btn btn-out" id="mode-reflect" onclick="setMode('reflect')" style="font-size:.78rem;padding:.35rem .75rem">Reflect</button>
       <button class="btn btn-out" id="mode-recover" onclick="setMode('recover')" style="font-size:.78rem;padding:.35rem .75rem;border-color:#0D5E57;color:#0D5E57">Recover</button>
+      <button class="btn btn-out" id="mode-local" onclick="setMode('local')" title="Write your own reflection without transmitting to any AI service" style="font-size:.78rem;padding:.35rem .75rem;border-color:rgba(60,50,30,.3);color:rgba(60,50,30,.55)">&#128274; Local Reflection</button>
     </div>
     <div id="mode-desc" class="panel teal" style="font-size:.84rem;margin-bottom:.75rem">Select a mode above, or simply begin a conversation.</div>
 
     <!-- RECOVERY PANEL -->
     <div id="recovery-panel" style="display:none;margin-bottom:.75rem">
+      <!-- Crisis note in Recovery Mode -->
+      <div style="background:#FEF2F2;border:1px solid rgba(153,27,27,.25);border-left:4px solid #991B1B;border-radius:.4rem;padding:.65rem .9rem;margin-bottom:.65rem;font-size:.82rem;line-height:1.65;color:#374151"><strong style="color:#991B1B">If you are in crisis:</strong> If you are experiencing thoughts of harming yourself or others, or feel unable to care for yourself, please call or text <strong>988</strong> (Suicide &amp; Crisis Lifeline) or contact a mental health professional. This app is not equipped to provide crisis support.</div>
       <div style="background:linear-gradient(135deg,#e8f4f2,#f8f6f1);border:2px solid #0D5E57;border-radius:.5rem;padding:1.1rem 1.25rem;margin-bottom:.65rem">
         <div style="font-family:'DM Mono',monospace;font-size:.6rem;color:#0D5E57;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.35rem">Current Load</div>
         <div style="display:flex;align-items:center;gap:1rem">
@@ -458,6 +488,20 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
       </div>
     </div>
 
+
+    <!-- LOCAL REFLECTION PANEL: no transmission mode -->
+    <div id="local-panel" style="display:none;margin-bottom:.75rem">
+      <div style="background:#f8f6f1;border:1px solid rgba(60,50,30,.15);border-radius:.45rem;padding:1rem">
+        <div style="font-family:monospace;font-size:.6rem;color:rgba(60,50,30,.5);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem">&#128274; Local Reflection — nothing transmitted</div>
+        <div id="local-prompt" style="font-family:serif;font-size:1.05rem;font-style:italic;color:#1a1612;margin-bottom:.7rem;line-height:1.65"></div>
+        <textarea id="local-text" placeholder="Write your reflection here. It will be saved to your archive when you save it. Nothing leaves your browser." style="width:100%;min-height:140px;padding:.7rem .85rem;font-family:sans-serif;font-size:.88rem;border:1px solid rgba(60,50,30,.18);border-radius:.35rem;background:#fff;resize:vertical;color:#1a1612;box-sizing:border-box;line-height:1.7"></textarea>
+        <div style="display:flex;gap:.5rem;margin-top:.65rem;flex-wrap:wrap">
+          <button class="btn btn-sm" onclick="saveLocalReflection()" style="font-size:.82rem;padding:.45rem 1rem">Save to archive</button>
+          <div style="font-size:.76rem;color:rgba(26,22,18,.4);font-style:italic;line-height:1.5;align-self:center">Saved entries appear in the Archive tab alongside Companion exchanges.</div>
+        </div>
+      </div>
+    </div>
+
     <div class="chat-container">
       <div class="chat-messages" id="chat-messages">
         <div class="msg assistant">Welcome. I am your Companion &mdash; part of the Examined system that holds your model and thinks alongside you. I know your profile and something of your assembly history. I will not tell you what to think or who to become. My role is to help you think more clearly from within your own perspective.<br><br>What would you like to examine today?</div>
@@ -503,6 +547,46 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
     </div>
   </div>
 
+
+  <!-- ABOUT TAB -->
+  <div class="tab-pane" id="pane-about">
+    <div class="phase-lbl">About Examined</div>
+    <h2 class="phase-title">Privacy, purpose &amp; limits</h2>
+    <p class="phase-desc">What this tool is, what it does with your data, and what it cannot do. Read this before sharing sensitive material.</p>
+
+    <div style="background:#f8f6f1;border-radius:.5rem;padding:1.1rem 1.25rem;margin-bottom:.85rem">
+      <div style="font-family:monospace;font-size:.6rem;color:#0D5E57;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.45rem">What this tool is</div>
+      <p style="font-size:.86rem;line-height:1.75;color:#374151;margin:0">Examined is a philosophical reflection tool designed to support self-knowledge, values clarification, and examined life as a practice. It is <strong>not a mental health service</strong>, not a substitute for therapy or counseling, and not designed for clinical use. If you are experiencing a mental health difficulty, please speak with a qualified professional.</p>
+    </div>
+
+    <div style="background:#f8f6f1;border-radius:.5rem;padding:1.1rem 1.25rem;margin-bottom:.85rem">
+      <div style="font-family:monospace;font-size:.6rem;color:#0D5E57;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.45rem">Your data</div>
+      <p style="font-size:.86rem;line-height:1.75;color:#374151;margin:0 0 .55rem"><strong>What stays in your browser:</strong> Your profile, essays, archive, and coherence readings are stored only in this browser. Philosophy Lab Corporation has no database and cannot access what you write.</p>
+      <p style="font-size:.86rem;line-height:1.75;color:#374151;margin:0 0 .55rem"><strong>What is transmitted when you use the Companion:</strong> Each message travels via an encrypted connection (HTTPS/TLS — the same standard used for online banking) to a secure proxy, then to Anthropic’s Claude API. <strong>The connection is encrypted in transit — it cannot be read by anyone in between.</strong> Only Anthropic sees the content, processes it to generate your response, and does not train its models on API data.</p>
+      <p style="font-size:.86rem;line-height:1.75;color:#374151;margin:0">Your messages are subject to <a href="https://www.anthropic.com/privacy" target="_blank" style="color:#0D5E57">Anthropic’s privacy policy</a>. If you prefer not to transmit anything, use <strong>Local Reflection mode</strong> in the Companion tab.</p>
+    </div>
+
+    <div style="background:#f8f6f1;border-radius:.5rem;padding:1.1rem 1.25rem;margin-bottom:.85rem">
+      <div style="font-family:monospace;font-size:.6rem;color:#0D5E57;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.45rem">What to write and what not to write</div>
+      <p style="font-size:.86rem;line-height:1.75;color:#374151;margin:0">Write only what you are comfortable transmitting to a third-party AI service. You do not need to use your full name or include identifying information. The assembly history questions invite genuine reflection — the more specific you are, the more precise the profile. You remain in control of what you share.</p>
+    </div>
+
+    <div style="background:#FEF2F2;border:1px solid rgba(153,27,27,.2);border-left:4px solid #991B1B;border-radius:.4rem;padding:.85rem 1rem;margin-bottom:.85rem">
+      <div style="font-family:monospace;font-size:.6rem;color:#991B1B;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4rem">If you are in crisis</div>
+      <p style="font-size:.86rem;line-height:1.75;color:#374151;margin:0">If you are experiencing thoughts of harming yourself or others, or feel unable to care for yourself, please call or text <strong>988</strong> (Suicide &amp; Crisis Lifeline, available 24/7 in the US) or contact a mental health professional immediately. This app is not equipped to provide crisis support.</p>
+    </div>
+
+    <div style="background:#f8f6f1;border-radius:.5rem;padding:1.1rem 1.25rem;margin-bottom:.85rem">
+      <div style="font-family:monospace;font-size:.6rem;color:#0D5E57;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.45rem">For students</div>
+      <p style="font-size:.86rem;line-height:1.75;color:#374151;margin:0">Your participation is voluntary. Your instructor cannot see your profile, essays, or Companion conversations unless you explicitly share them. This app is not graded and your data is not accessible to Saint Petersburg College.</p>
+    </div>
+
+    <div style="font-size:.8rem;color:rgba(26,22,18,.4);margin-top:.75rem;line-height:1.7">
+      Philosophy Lab Corporation &bull; Examined &bull; 2026<br>
+      <a href="#" onclick="showDisclosureModal();return false;" style="color:#0D5E57">View initial disclosure again</a>
+    </div>
+  </div>
+
 </div><!-- end workspace -->
 
 <script>
@@ -527,6 +611,7 @@ function loadState(){
 }
 function saveState(){localStorage.setItem('examined_v2',JSON.stringify(state));}
 loadState();
+checkDisclosure(); // Show first-entry disclosure if not yet seen
 // Init relational question — show on first check-in, every 3rd thereafter
 (function(){
   var rq=document.getElementById('relational-question');
@@ -697,12 +782,13 @@ function setMode(m){
     experiment:'Laboratory mode: describe what you want to experiment with. We can explore counterfactuals, what-if scenarios, or what the model predicts about who you could become.',
     reflect:'Reflection mode: bring something real from your life right now. A difficult situation, a feeling of uncertainty, a success, a regret.',
     recover:'Recovery mode: for moments when you may not need deeper analysis yet \u2014 you may need rest, grounding, or a smaller next step first. Low coherence is not failure. It is information.'
-  };
+  ,
+    local:'Local Reflection: write your own reflection here. Nothing is transmitted to any server. Your response is saved to your archive exactly like a Companion exchange.'};
   document.getElementById('mode-desc').textContent=descs[m]||'';
   // Show/hide Recovery UI panel
   var recPanel=document.getElementById('recovery-panel');
   if(recPanel) recPanel.style.display=(m==='recover')?'block':'none';
-  ['explore','experiment','reflect','recover'].forEach(function(k){
+  ['explore','experiment','reflect','recover','local'].forEach(function(k){
     var btn=document.getElementById('mode-'+k);
     if(btn){
       btn.className=k===m?'btn':'btn btn-out';
@@ -1469,6 +1555,72 @@ function updateHint(hintEl, text){
   else            msg=wc+' words — strong response. This level of depth generates the most precise profiles.';
   hintEl.textContent=msg;
 }
+
+
+// ── DISCLOSURE MODAL ─────────────────────────────────────────────────
+function showDisclosureModal(){
+  var m=document.getElementById('disclosure-modal');
+  if(m){m.style.display='flex';}
+}
+function acknowledgeDisclosure(){
+  var m=document.getElementById('disclosure-modal');
+  if(m){m.style.display='none';}
+  localStorage.setItem('examined_disclosure_v1','acknowledged');
+}
+function checkDisclosure(){
+  var seen=localStorage.getItem('examined_disclosure_v1');
+  if(!seen){showDisclosureModal();}
+}
+
+
+// ── LOCAL REFLECTION MODE ─────────────────────────────────────────────
+var LOCAL_PROMPTS={
+  explore:'What future or possibility is on your mind right now? Describe it in your own words, then reflect on what draws you toward it and what holds you back.',
+  experiment:'Think of a choice you have made or a path not taken. What happened, and what does it tell you about who you are and what you value?',
+  reflect:'What is something real in your life right now that is asking for your attention? Describe the situation and what it brings up in you.',
+  recover:'What kind of burden feels strongest right now? Describe it, and then name one small thing that might reduce it.',
+  local:'What is on your mind? Write freely. This stays entirely on your device.'
+};
+
+function saveLocalReflection(){
+  var txt=document.getElementById('local-text');
+  if(!txt||!txt.value.trim()) return;
+  var mode=state.currentMode||'local';
+  var entry={
+    date:new Date().toLocaleString(),
+    mode:'local',
+    exchange:'[Local Reflection \u2014 '+mode+' mode]\n\n'+txt.value.trim(),
+    archived:true
+  };
+  if(!state.archive) state.archive=[];
+  state.archive.push(entry);
+  saveState();
+  txt.value='';
+  var btn=document.querySelector('#local-panel button');
+  if(btn){btn.textContent='Saved ✓';setTimeout(function(){btn.textContent='Save to archive';},1600);}
+  refreshArchive();
+}
+
+// Extend setMode to handle local panel show/hide and chat hide/show
+var _sm2=window.setMode;
+window.setMode=function(m){
+  _sm2(m);
+  var localPanel=document.getElementById('local-panel');
+  var chatContainer=document.querySelector('.chat-container');
+  var chatInput=document.querySelector('.chat-input-wrap');
+  var isLocal=(m==='local');
+  if(localPanel) localPanel.style.display=isLocal?'block':'none';
+  if(chatContainer) chatContainer.style.display=isLocal?'none':'block';
+  if(chatInput) chatInput.style.display=isLocal?'none':'flex';
+  if(isLocal){
+    // Set a mode-appropriate prompt in the local panel
+    var promptEl=document.getElementById('local-prompt');
+    var baseMode=state.currentMode||'reflect';
+    if(promptEl) promptEl.textContent=LOCAL_PROMPTS[baseMode]||LOCAL_PROMPTS.local;
+    var ta=document.getElementById('local-text');
+    if(ta) ta.focus();
+  }
+};
 
 </script>
 </body>

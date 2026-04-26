@@ -513,10 +513,29 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
   <div class="tab-pane" id="pane-coherence">
     <div class="phase-lbl">Daily Coherence Check-in</div>
     <h2 class="phase-title">How are you today?</h2>
-    <p class="phase-desc">Five domains, one slider each. Thirty seconds. The trajectory over time is more informative than any single reading.</p>
+    <p class="phase-desc">Six domains, one slider each. Thirty seconds. The trajectory over time is more informative than any single reading. After saving, you will receive a reflection prompt from the ABCD framework.</p>
     <div class="coherence-domains" id="coherence-sliders"></div>
     <div id="relational-question" style="display:none;margin-top:1.1rem;background:linear-gradient(135deg,#f8f6f1,#eeeae1);border:1px solid rgba(13,94,87,.2);border-radius:.45rem;padding:.9rem 1rem"><div style="font-family:'DM Mono',monospace;font-size:.6rem;color:#0D5E57;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.45rem">A question to hold</div><p style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-style:italic;color:#1a1612;margin:0 0 .65rem;line-height:1.65">Is there anyone whose capacity to act from their values is being shaped — supported or limited — by your situation, decisions, or context right now?</p><p style="font-size:.8rem;color:rgba(26,22,18,.5);margin:0 0 .6rem;font-style:italic">You don’t need to solve this. Just notice it.</p><textarea id="relational-response" placeholder="A few words, or nothing at all…" style="width:100%;min-height:70px;padding:.6rem .75rem;font-family:'DM Sans',sans-serif;font-size:.88rem;border:1px solid rgba(60,50,30,.18);border-radius:.35rem;background:#fff;resize:vertical;color:#1a1612;box-sizing:border-box"></textarea></div>
     <button class="btn" onclick="saveCoherence()" style="margin-top:.75rem">Save today&rsquo;s reading</button>
+    <!-- ABCD DAILY PROMPT PANEL — appears after saving check-in -->
+    <div id="abcd-prompt-panel" style="display:none;margin-top:1rem">
+      <div style="background:linear-gradient(135deg,#f8f6f1,#eef7f5);border:1px solid rgba(13,94,87,.2);border-radius:.5rem;padding:1rem 1.1rem">
+        <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem">
+          <div id="abcd-category-badge" style="font-family:'DM Mono',monospace;font-size:.58rem;text-transform:uppercase;letter-spacing:.1em;padding:.25rem .6rem;border-radius:.25rem;background:#0D5E57;color:#fff"></div>
+          <div style="font-family:'DM Mono',monospace;font-size:.6rem;color:rgba(26,22,18,.45);text-transform:uppercase;letter-spacing:.06em">Today&rsquo;s reflection prompt</div>
+        </div>
+        <p id="abcd-prompt-text" style="font-family:'Cormorant Garamond',serif;font-size:1.08rem;font-style:italic;color:#1a1612;line-height:1.7;margin:0 0 .75rem"></p>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+          <button class="btn btn-sm" id="abcd-companion-btn" onclick="bringPromptToCompanion()" style="font-size:.8rem;padding:.4rem .9rem">Bring this to the Companion &rarr;</button>
+          <button class="btn btn-out btn-sm" onclick="toggleAbcdNote()" style="font-size:.8rem;padding:.4rem .9rem">&#128221; Note a thought</button>
+          <button class="btn btn-out btn-sm" onclick="dismissAbcdPrompt()" style="font-size:.8rem;padding:.4rem .9rem;color:rgba(26,22,18,.4);border-color:rgba(26,22,18,.15)">Dismiss</button>
+        </div>
+        <div id="abcd-note-area" style="display:none;margin-top:.65rem">
+          <textarea id="abcd-note-text" placeholder="A few words, or a longer thought…" style="width:100%;min-height:65px;padding:.55rem .7rem;font-family:'DM Sans',sans-serif;font-size:.87rem;border:1px solid rgba(60,50,30,.18);border-radius:.35rem;background:#fff;resize:vertical;color:#1a1612;box-sizing:border-box;line-height:1.6"></textarea>
+          <button class="btn btn-sm" onclick="saveAbcdNote()" style="margin-top:.4rem;font-size:.8rem;padding:.38rem .85rem">Save to archive</button>
+        </div>
+      </div>
+    </div>
     <div style="margin-top:1.5rem">
       <div style="font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem">Your coherence trajectory</div>
       <div class="coh-chart" id="coh-chart">
@@ -1033,6 +1052,8 @@ function saveCoherence(){
   }
   var btn=document.querySelector('button[onclick="saveCoherence()"]');
   if(btn){btn.textContent='Saved ✓';setTimeout(function(){btn.textContent='Save today\u2019s reading';},1800);}
+  // Show ABCD prompt calibrated to today's scores
+  showAbcdPrompt(scores);
 }
 function buildCoherenceChart(){
   var c=document.getElementById('coh-chart');if(!c)return;
@@ -1764,6 +1785,173 @@ function resetDisclosure(){
   msg.textContent='Disclosure reset. It will show again on your next visit to this page.';
   document.body.appendChild(msg);
   setTimeout(function(){msg.remove();},3000);
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════
+// ABCD DAILY REFLECTION PROMPTS
+// A = Agency, B = Beauty/Awe, C = Context/Contingency, D = Dynamics
+// Prompts are calibrated to the lowest-scoring coherence domain
+// ═══════════════════════════════════════════════════════════════════════
+
+var ABCD_PROMPTS = {
+  A: [
+    'What is one thing, however small, that you could change or influence in your situation today?',
+    'Where in your life right now do you feel most capable of shaping what happens next?',
+    'Is there a decision you have been postponing that is actually yours to make?',
+    'What would you do today if you were certain it was within your power to affect the outcome?',
+    'Where are you acting from your own values, and where are you simply reacting to circumstances?',
+    'What is one concrete step you could take today that expresses who you are trying to become?',
+    'Are you treating yourself as an agent who can act, or as someone to whom things happen?'
+  ],
+  B: [
+    'What, in the last few days, has genuinely surprised you or stopped you in your tracks?',
+    'Is there something in your ordinary environment today that, if you looked closely, would be remarkable?',
+    'When did you last feel genuinely moved by something outside yourself — in nature, art, another person, or an idea?',
+    'What aspect of your situation, viewed from a distance, would strike an outsider as astonishing?',
+    'Where is the wonder in what you are living through right now, even if it is difficult?',
+    'What small thing today carries more complexity and strangeness than it appears to on the surface?',
+    'Is there a moment recently when you felt the particular privilege of being alive and conscious?'
+  ],
+  C: [
+    'How much of what you are experiencing right now is shaped by circumstances you did not choose?',
+    'What would this situation look like to someone with a completely different history from yours?',
+    'Which of your current beliefs or reactions are products of your specific context rather than universal truths?',
+    'What conditions — structural, relational, historical — are shaping your options today that you may be treating as fixed?',
+    'If your circumstances had been different in one key way, how would your current sense of yourself be different?',
+    'Who in your life right now is operating under conditions substantially different from yours, and what does that mean for how you understand their choices?',
+    'What feels personal to you today that might actually be contextual — structural rather than individual?'
+  ],
+  D: [
+    'What is changing in your life right now that you have not yet fully acknowledged?',
+    'Where are you resisting change that may already be underway?',
+    'What would it mean to treat your current difficulty as information about where you are in a larger process of development?',
+    'How are you different from the person who faced a similar challenge a year ago?',
+    'What pattern in your life has changed — ended, shifted, or begun — in the last few months?',
+    'If your current situation is a transition rather than a destination, where might it be taking you?',
+    'What would you need to let go of to be fully available to what is emerging?'
+  ]
+};
+
+// Domain index to ABCD category mapping
+// Scores: [physEnergy, tempHorizon, relCoherence, structClarity, identIntegrity, recovAccess]
+// Domain 0 (physical energy) → D (Dynamics — the body is the site of change and capacity)
+// Domain 1 (temporal horizon) → C (Context/Contingency — seeing one's situation in time)
+// Domain 2 (relational coherence) → B (Beauty/Awe — others as the primary source of wonder)
+// Domain 3 (structural clarity) → A (Agency — clarity enables action)
+// Domain 4 (identity integrity) → A (Agency — the self as the agent)
+// Domain 5 (recovery access) → D (Dynamics — recovery is the adaptive capacity)
+var DOMAIN_TO_ABCD = ['D','C','B','A','A','D'];
+var ABCD_LABELS = {A:'Agency',B:'Beauty & Awe',C:'Context & Contingency',D:'Dynamics'};
+
+// Track prompt index per category to avoid repetition
+if(!window._abcdIdx) window._abcdIdx = {A:0,B:0,C:0,D:0};
+var _currentAbcdPrompt = {category:'A', text:'', promptIndex:0};
+
+function selectAbcdPrompt(scores){
+  // Find the domain with the lowest score — that determines the category
+  var minScore = 6;
+  var minDomain = 4; // default to identity
+  for(var i=0;i<scores.length;i++){
+    if((scores[i]||3) < minScore){
+      minScore = scores[i]||3;
+      minDomain = i;
+    }
+  }
+  // If all scores are high (4-5), use Beauty/Awe as the expansive prompt
+  if(minScore >= 4){
+    minDomain = 2; // relational coherence → Beauty/Awe
+  }
+  var cat = DOMAIN_TO_ABCD[minDomain] || 'A';
+  var prompts = ABCD_PROMPTS[cat];
+  var idx = window._abcdIdx[cat] % prompts.length;
+  window._abcdIdx[cat]++;
+  _currentAbcdPrompt = {category:cat, text:prompts[idx], promptIndex:idx};
+  return _currentAbcdPrompt;
+}
+
+function showAbcdPrompt(scores){
+  var prompt = selectAbcdPrompt(scores);
+  var panel = document.getElementById('abcd-prompt-panel');
+  var badge = document.getElementById('abcd-category-badge');
+  var text  = document.getElementById('abcd-prompt-text');
+  if(!panel||!badge||!text) return;
+  badge.textContent = ABCD_LABELS[prompt.category] || prompt.category;
+  text.textContent  = prompt.text;
+  panel.style.display = 'block';
+  // Scroll gently to show it
+  setTimeout(function(){
+    panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+  },300);
+}
+
+function dismissAbcdPrompt(){
+  var panel=document.getElementById('abcd-prompt-panel');
+  if(panel) panel.style.display='none';
+  var noteArea=document.getElementById('abcd-note-area');
+  if(noteArea) noteArea.style.display='none';
+  var ta=document.getElementById('abcd-note-text');
+  if(ta) ta.value='';
+}
+
+function toggleAbcdNote(){
+  var area=document.getElementById('abcd-note-area');
+  if(!area) return;
+  area.style.display = area.style.display==='none' ? 'block' : 'none';
+  if(area.style.display==='block'){
+    var ta=document.getElementById('abcd-note-text');
+    if(ta) ta.focus();
+  }
+}
+
+function saveAbcdNote(){
+  try{
+  
+    var ta=document.getElementById('abcd-note-text');
+    if(!ta||!ta.value.trim()) return;
+    var entry={
+      date:new Date().toLocaleString(),
+      mode:'abcd',
+      exchange:'[ABCD Reflection \u2014 '+ABCD_LABELS[_currentAbcdPrompt.category]+']\n\nPrompt: '+_currentAbcdPrompt.text+'\n\nNote: '+ta.value.trim(),
+      archived:true
+    };
+    if(!state.archive) state.archive=[];
+    state.archive.push(entry);
+    saveState();
+    ta.value='';
+    var btn=document.querySelector('#abcd-note-area button');
+    if(btn){btn.textContent='Saved ✓';setTimeout(function(){btn.textContent='Save to archive';},1600);}
+    renderArchive();
+    // Optionally collapse the note area
+    setTimeout(function(){
+      var area=document.getElementById('abcd-note-area');
+      if(area) area.style.display='none';
+    },1700);
+  
+  }catch(e){
+    // Graceful fallback — archive save may not work in all environments
+    var btn=document.querySelector('#abcd-note-area button');
+    if(btn) btn.textContent='Saved ✓';
+    var ta=document.getElementById('abcd-note-text');
+    if(ta) ta.value='';
+  }
+}
+
+function bringPromptToCompanion(){
+  // Pre-load the ABCD prompt into the chat input and switch to Companion/Reflect
+  swTab('companion');
+  setMode('reflect');
+  // Small delay to let the tab render
+  setTimeout(function(){
+    var input=document.getElementById('chat-input');
+    if(input){
+      var promptIntro = '['+ABCD_LABELS[_currentAbcdPrompt.category]+' prompt] ';
+      input.value = promptIntro + _currentAbcdPrompt.text;
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+    }
+  },250);
+  dismissAbcdPrompt();
 }
 
 </script>

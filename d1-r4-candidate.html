@@ -506,10 +506,21 @@ var state={
   trajectoryType:0, trajectoryDismissedUntil:0, recoverySuggestionDismissedUntil:0,
   corrigibilityMode:'default', rejectedInferenceTombstones:[]
 };
-function loadState(){ var d=localStorage.getItem('examined_v3'); if(d){try{var s=JSON.parse(d);state=Object.assign(state,s);}catch(e){}} }
-function saveState(){ localStorage.setItem('examined_v3',JSON.stringify(state)); }
-loadState();
-
+function loadState(){
+  var d=localStorage.getItem('examined_v3');
+  if(!d){
+    var legacy=localStorage.getItem('examined_v2');
+    if(legacy){
+      try{
+        JSON.parse(legacy);
+        localStorage.setItem('examined_v3',legacy);
+        d=legacy;
+        console.log('[Examined D1] copied examined_v2 state forward to examined_v3; legacy copy retained for rollback.');
+      }catch(e){}
+    }
+  }
+  if(d){try{var s=JSON.parse(d);state=Object.assign(state,s);}catch(e){}}
+}
 // CORRIGIBILITY-2 CORE STATE START
 var examinedRequestGeneration=0;
 var examinedActiveController=null;

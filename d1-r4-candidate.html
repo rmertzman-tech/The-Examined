@@ -521,6 +521,8 @@ function loadState(){
   }
   if(d){try{var s=JSON.parse(d);state=Object.assign(state,s);}catch(e){}}
 }
+  function saveState(){ localStorage.setItem('examined_v3',JSON.stringify(state)); }
+loadState();
 // CORRIGIBILITY-2 CORE STATE START
 var examinedRequestGeneration=0;
 var examinedActiveController=null;

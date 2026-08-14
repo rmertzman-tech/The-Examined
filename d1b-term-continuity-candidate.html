@@ -1020,6 +1020,7 @@ async function sendMessage(){
   var userId=examinedUid('turn');
   appendMsg('user',msg,userId);
   state.chatHistory.push({id:userId,role:'user',content:msg,provenance:'USER_REPORTED',epistemicStatus:'user_report',timestamp:new Date().toISOString()});
+  saveState();
   var request=beginCompanionRequest();
   var thinking=appendMsg('thinking','Thinking…');
   var scores=state.prfScores;
@@ -1071,7 +1072,6 @@ async function sendMessage(){
     if(!chatResult.complete){
       appendMsg('thinking','The connection ended before Examined could verify a complete response. Your conversation was preserved; ask the Companion to continue from its last sentence.');
     }
-    if(state.chatHistory.length>30)state.chatHistory=state.chatHistory.slice(-20);
     saveState();
   }catch(e){
     if(request.generation!==examinedRequestGeneration)return;

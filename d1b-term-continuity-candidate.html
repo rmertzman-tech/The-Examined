@@ -841,9 +841,10 @@ function swTab(t){
   var idx=tabs.indexOf(t);
   if(idx>=0)document.querySelectorAll('.ntb')[idx].classList.add('active');
   if(t==='archive')renderArchive();
-  if(t==='coherence'){buildCoherenceSliders();buildCoherenceChart();renderTrajectoryPanel();}
-  if(t==='construct')renderConstructionProjects();
-  window.scrollTo({top:0,behavior:'smooth'});
+if(t==='coherence'){buildCoherenceSliders();buildCoherenceChart();renderTrajectoryPanel();}
+if(t==='construct')renderConstructionProjects();
+if(t==='companion'&&!examinedActiveController)renderCompanionHistory();
+window.scrollTo({top:0,behavior:'smooth'});
 }
 function setMode(m){
   state.currentMode=m;
@@ -1084,6 +1085,34 @@ async function sendMessage(){
   }finally{
     finishCompanionRequest(request.generation);
   }
+}
+  function renderCompanionHistory(){
+  var msgs=document.getElementById('chat-messages');
+  if(!msgs)return;
+
+  msgs.innerHTML='';
+
+  var history=(state.chatHistory||[]).filter(function(m){
+    return m &&
+      (m.role==='user'||m.role==='assistant') &&
+      m.epistemicStatus!=='control_event' &&
+      !m.controlEvent;
+  });
+
+  if(!history.length){
+    appendMsg(
+      'assistant',
+      'Welcome. I am your Companion — part of the Examined system that holds your model and thinks alongside you. I know your profile and something of your assembly history. I will not tell you what to think or who to become. My role is to help you think more clearly from within your own perspective.\n\nWhat would you like to examine today?'
+    );
+    return;
+  }
+
+  history.forEach(function(m){
+    var div=appendMsg(m.role,m.content,m.id||null);
+    if(m.role==='assistant'&&m.epistemicStatus==='rejected'&&div){
+      div.classList.add('rejected-output');
+    }
+  });
 }
 function appendMsg(role,text,turnId){
   var msgs=document.getElementById('chat-messages');
@@ -1697,6 +1726,7 @@ function checkBrowserRestore(){
 
 function initApp(){
   checkDisclosure();
+  renderCompanionHistory();
   var rq=document.getElementById('relational-question');
   if(rq){ var n=(state.coherenceHistory||[]).length; rq.style.display=(n%3===0)?'block':'none'; }
   var btn=document.getElementById('restore-btn');

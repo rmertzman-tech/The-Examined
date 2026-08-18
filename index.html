@@ -141,8 +141,23 @@ input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:14px; he
     <button class="btn btn-out" id="restore-btn" onclick="checkBrowserRestore()" style="font-size:.83rem">&#128274; Continue my previous session</button>
     <button class="btn btn-out" onclick="hardReset()" style="font-size:.83rem;color:var(--muted);border-color:var(--border)">Clear and restart</button>
   </div>
-  <div id="import-area" style="display:none;margin-top:.75rem">
-    <button class="btn" onclick="importTwin()" style="font-size:.83rem">&#128193; Load twin from file</button>
+  <div id="import-area"
+     style="display:block;margin-top:1.15rem;padding-top:1rem;
+            border-top:1px solid var(--border);text-align:center">
+
+  <div style="font-size:.76rem;color:var(--muted);margin-bottom:.65rem">
+    Already completed PRF-22 or have an Examined backup?
+  </div>
+
+  <button class="btn btn-out"
+          onclick="importTwin()"
+          style="font-size:.83rem">
+    &#128193; Restore from PRF-22 or Examined JSON
+  </button>
+
+  <div style="font-size:.72rem;color:var(--muted);
+              margin-top:.5rem;line-height:1.5">
+    Load your saved profile instead of beginning the assessment again.
   </div>
 </div>
 
@@ -1634,8 +1649,8 @@ function importTwin(){
         document.getElementById('workspace').style.display='block';
         if(state.profile){showProfileResult();}else{showEl('profile-start');}
         buildCoherenceSliders();renderArchive();buildCoherenceChart();renderConstructionProjects();renderTrajectoryPanel();
-        alert('Twin restored successfully. Welcome back.');
-      }catch(err){alert('Could not read this file. Please use a twin file exported from Examined.');}
+       alert('Profile or Examined workspace restored successfully. Welcome back.');
+      }catch(err)alert('Could not restore this file. Please choose a compatible PRF-22 JSON or an Examined backup JSON file.');
     };
     reader.readAsText(file);
   };

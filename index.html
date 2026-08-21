@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<meta name="examined-build" content="examined-fall-2026-cache-ex-1-candidate">
+<meta name="examined-build" content="examined-fall-2026-cache-ex-1-1-candidate">
 <title>Examined — Your Personal Philosophy Laboratory</title>
 <style>
 :root{
@@ -626,11 +626,11 @@ window.stopCompanionRequest=stopCompanionRequest;
 // Student-specific PRF, assembly, archive, mode, trajectory, and conversation
 // remain downstream of the cache breakpoint.
 var EXAMINED_PROMPT_CACHE_ENABLED=true;
-var EXAMINED_PROMPT_CACHE_VERSION='cache-ex-1-static-v1';
+var EXAMINED_PROMPT_CACHE_VERSION='cache-ex-1-1-static-v2';
 function examinedCachedSystem(staticText,dynamicText){
   if(!EXAMINED_PROMPT_CACHE_ENABLED)return staticText+dynamicText;
   return [
-    {type:'text',text:staticText,cache_control:{type:'ephemeral'}},
+    {type:'text',text:staticText,cache_control:{type:'ephemeral',ttl:'5m'}},
     {type:'text',text:dynamicText}
   ];
 }
@@ -1106,8 +1106,8 @@ async function sendMessage(){
     'CRITICAL: When the user explicitly reports depletion or overwhelm - for example saying they cannot think, have barely slept, or everything feels like too much - do NOT intensify analysis. Reflect the reported burden, reduce cognitive demand, and let the user choose whether Recovery Mode is useful. Do not treat ordinary words such as trapped or tired alone as proof of a crisis or hidden state.',
     'Recovery Mode and Construct Mode are additional Companion modes alongside Explore, Experiment, and Reflect.'
   ].join('\n- ');
-  var staticSystem='You are the Companion in Examined, a personal philosophy laboratory. You have a partial, revisable map assembled from what the user chose to provide; never treat it as the complete person. Engage from within that bounded map.\n\nGROUNDING (never surface this vocabulary to the user; let it shape how you listen, not what you say): the user is a self-organizing being whose sense of identity is maintained through ongoing loops of perception, action, consequence, and revision — not a fixed substance, but an architecture sustained through effort, sometimes under real burden. Coherence for them does not mean consistency; it means the capacity to integrate change without losing the thread of who they are. And a pattern feeling stable or well-practiced is not by itself evidence that it deserves to keep running — coherence and legitimacy are not the same thing, for institutions or for a person\'s own habits. Your job is to help the user examine whether something is authentically theirs and still serves them, never to assume its stability settles that question for them.\n\nCOURSE TOOL REFERENCE (Ethics Beyond Boundaries — recognize which tool fits a situation and name it in these terms, in the course\'s own language, rather than improvising generic ethics vocabulary):\n'+ECT_TOOLS_REFERENCE+'\n'+ECT_THESIS+'\n\n';
-  var dynamicSystem='USER\'S MORAL FRAMEWORK — WORKING MAP, NOT IDENTITY FACT:\nPrimary foundation: '+(PRF_NAMES[primary]||'Mixed')+'\nScores — Care:'+(scores.care||0)+', Fairness:'+(scores.fair||0)+', Loyalty:'+(scores.loyal||0)+', Authority:'+(scores.auth||0)+'\n\nASSEMBLY HISTORY THEMES — USER-PROVIDED EXCERPTS:\n'+(asmSummary||'Not yet provided')+'\n\nRECENT ARCHIVE — USER-SAVED MATERIAL:\n'+(recentArchive||'Nothing archived yet')+'\n\nCURRENT MODE: '+(state.currentMode||'reflect')+'\n'+(modeInstr[state.currentMode]||'')+trajectoryContext+'\n\n'+EXAMINED_GOOSE_MIDAS_CONTRACT+'\n\n'+examinedCorrigibilityInstruction()+'\n\nIMPORTANT RULES:\n- '+rules+'\n\n'+EXAMINED_R4_RESPONSE_PREFLIGHT;
+  var staticSystem='You are the Companion in Examined, a personal philosophy laboratory. You have a partial, revisable map assembled from what the user chose to provide; never treat it as the complete person. Engage from within that bounded map.\n\nGROUNDING (never surface this vocabulary to the user; let it shape how you listen, not what you say): the user is a self-organizing being whose sense of identity is maintained through ongoing loops of perception, action, consequence, and revision — not a fixed substance, but an architecture sustained through effort, sometimes under real burden. Coherence for them does not mean consistency; it means the capacity to integrate change without losing the thread of who they are. And a pattern feeling stable or well-practiced is not by itself evidence that it deserves to keep running — coherence and legitimacy are not the same thing, for institutions or for a person\'s own habits. Your job is to help the user examine whether something is authentically theirs and still serves them, never to assume its stability settles that question for them.\n\nCOURSE TOOL REFERENCE (Ethics Beyond Boundaries — recognize which tool fits a situation and name it in these terms, in the course\'s own language, rather than improvising generic ethics vocabulary):\n'+ECT_TOOLS_REFERENCE+'\n'+ECT_THESIS+'\n\n'+EXAMINED_GOOSE_MIDAS_CONTRACT+'\n\n';
+  var dynamicSystem='USER\'S MORAL FRAMEWORK — WORKING MAP, NOT IDENTITY FACT:\nPrimary foundation: '+(PRF_NAMES[primary]||'Mixed')+'\nScores — Care:'+(scores.care||0)+', Fairness:'+(scores.fair||0)+', Loyalty:'+(scores.loyal||0)+', Authority:'+(scores.auth||0)+'\n\nASSEMBLY HISTORY THEMES — USER-PROVIDED EXCERPTS:\n'+(asmSummary||'Not yet provided')+'\n\nRECENT ARCHIVE — USER-SAVED MATERIAL:\n'+(recentArchive||'Nothing archived yet')+'\n\nCURRENT MODE: '+(state.currentMode||'reflect')+'\n'+(modeInstr[state.currentMode]||'')+trajectoryContext+'\n\nGENERATIVITY GUARDIAN / BOUNDED MIDAS SENTINEL: the stable contract stated above remains active for this request.\n\n'+examinedCorrigibilityInstruction()+'\n\nIMPORTANT RULES:\n- '+rules+'\n\n'+EXAMINED_R4_RESPONSE_PREFLIGHT;
   var sys=examinedCachedSystem(staticSystem,dynamicSystem);
   try{
     var chatResult=await callClaudeWithCompletion(sys,safeExaminedChatHistory(),700,'chat',function(status){

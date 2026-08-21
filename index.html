@@ -626,13 +626,31 @@ window.stopCompanionRequest=stopCompanionRequest;
 // Student-specific PRF, assembly, archive, mode, trajectory, and conversation
 // remain downstream of the cache breakpoint.
 var EXAMINED_PROMPT_CACHE_ENABLED=true;
-var EXAMINED_PROMPT_CACHE_VERSION='cache-ex-1-1-static-v2';
+var EXAMINED_PROMPT_CACHE_VERSION='cache-ex-1-2-static-v3';
 function examinedCachedSystem(staticText,dynamicText){
   if(!EXAMINED_PROMPT_CACHE_ENABLED)return staticText+dynamicText;
   return [
     {type:'text',text:staticText,cache_control:{type:'ephemeral',ttl:'5m'}},
     {type:'text',text:dynamicText}
   ];
+}
+function examinedSanitizeMessages(messages){
+  return (Array.isArray(messages)?messages:[]).map(function(m){
+    if(!m||typeof m!=='object')return null;
+    var role=m.role==='assistant'?'assistant':'user';
+    var content=m.content;
+    if(typeof content!=='string'&&!Array.isArray(content))content=String(content==null?'':content);
+    return {role:role,content:content};
+  }).filter(function(m){return m&&m.content!=='';});
+}
+function logExaminedRequestShape(messages){
+  try{
+    console.info('[Examined CACHE-EX-1.2 request-shape]',{
+      message_count:messages.length,
+      message_keys:messages.map(function(m){return Object.keys(m).sort().join(',');}),
+      has_forbidden_id:messages.some(function(m){return Object.prototype.hasOwnProperty.call(m,'id');})
+    });
+  }catch(e){}
 }
 function logExaminedPromptCacheUsage(usage){
   if(!usage||typeof usage!=='object')return;
@@ -659,9 +677,11 @@ async function requestClaude(system,messages,maxTokens){
   var externalSignal=examinedActiveController&&examinedActiveController.signal;
   var relayAbort=function(){controller.abort();};
   if(externalSignal){if(externalSignal.aborted)controller.abort();else externalSignal.addEventListener('abort',relayAbort,{once:true});}
+  var safeMessages=examinedSanitizeMessages(messages);
+  logExaminedRequestShape(safeMessages);
   try{
     resp=await fetch(PROXY,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:maxTokens||1200,system:system,messages:messages}),
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:maxTokens||1200,system:system,messages:safeMessages}),
       credentials:'omit',cache:'no-store',referrerPolicy:'no-referrer',signal:controller.signal});
   }catch(networkErr){ throw new Error('NETWORK_ERROR: '+networkErr.name+': '+networkErr.message); }
   finally{clearTimeout(timeoutId);if(externalSignal)externalSignal.removeEventListener('abort',relayAbort);}
